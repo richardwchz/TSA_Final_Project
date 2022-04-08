@@ -62,15 +62,40 @@ ts_EU_price %>% mstl() %>%
 autoplot()
 ```
 ```{r}
-ts_EU_price_shorten <- ts(EU_price$Price,frequency=12,start=c(2004,09), end=c(2021,01))
+ts_EU_price_shorten <- ts(EU_price$Price[177:387],frequency=1)
 plot(ts_EU_price_shorten)
+```
+
+
+```{r}
+ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12)
+plot(ts_EU_price_shorten_withseas)
+```
+```{r}
+ts_EU_price_shorten_withseas %>% mstl() %>%
+autoplot()
 ```
 ```
 
 ```{r}
+ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
+plot(ts_EU_price_previous)
+```
+
+```{r}
+ts_EU_price_previous %>% mstl() %>%
+autoplot()
+```
+
+```{r}
+ts_EU_price_shorten %>% mstl() %>%
+autoplot()
+```
+
+```{r}
 n_for=12
-ts_EU_price_train<-subset(ts_EU_price,end=length(ts_EU_price)-n_for)
-ts_EU_price_test<-subset(ts_EU_price,start=length(ts_EU_price)-n_for)
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
 ts_EU_price_train %>% mstl() %>%
 autoplot()
 ```
