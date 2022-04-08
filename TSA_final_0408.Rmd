@@ -43,37 +43,6 @@ library(kableExtra)
 ```
 
 ```{r}
-US_NG<-read.csv(file="./Data/Henry_Hub_Natural_Gas_Spot_Price.csv", skip=4)
-US_NG
-```
-```{r}
-US_NG$month <- substring(US_NG$Month,1,3)
-US_NG$year <- substring(US_NG$Month,4,)
-```
-
-
-```{r}
-US_NG$Month<-my(paste0(US_NG$month,"-",US_NG$year))
-head(US_NG)
-US_NG<-US_NG[order(as.Date(US_NG$Month, format="%Y/%m/%d")),]
-US_NG<-US_NG%>%
-  rename( HHNG.Price=Henry.Hub.Natural.Gas.Spot.Price.Dollars.per.Million.Btu ) 
-tail(US_NG)
-```
-
-```{r}
-ts_US_NG <- ts(US_NG$HHNG.Price,frequency=12,start=c(1997,01), end=c(2022,02))
-plot(ts_US_NG)
-```
-```{r}
-n_for=12
-ts_US_NG_train<-subset(ts_US_NG,end=length(ts_US_NG)-n_for)
-ts_US_NG_test<-subset(ts_US_NG,start=length(ts_US_NG)-n_for)
-ts_US_NG_train %>% mstl() %>%
-autoplot()
-```
-
-```{r}
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
 EU_price$DATE<-as.Date(EU_price$DATE)
 EU_price
@@ -85,21 +54,26 @@ EU_price<-EU_price%>%
 tail(EU_price)
 ```
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01), end=c(2022,03))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01), end=c(2022,03))
 plot(ts_EU_price)
 #change frequency to 1
 #study the trend rather than seasonality
 ```
 ```{r}
-library(trend)
-pettittTest<-pettitt.test(ts_EU_price)
-print(pettittTest)
+ts_EU_price_yearly <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+plot(ts_EU_price_yearly)
 ```
-#
-p value is really small, reject the null, so there is a change in trend.
 
 ```{r}
-ts_EU_price %>% mstl() %>%
+library(trend)
+pettittTest<-pettitt.test(ts_EU_price_yearly)
+print(pettittTest)
+```
+#p value is really small, reject the null, so there is a change in trend.
+#The point of change is 12*14+9=177, so the change in trend happens in 2004.09.01.
+
+```{r}
+ts_EU_price_yearly %>% mstl() %>%
 autoplot()
 ```
 
