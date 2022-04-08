@@ -17,6 +17,15 @@ library(kableExtra)
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
 EU_price$DATE<-as.Date(EU_price$DATE)
 EU_price
+
+EU_GDP<-read.csv(file="./Data/EU_GDP.csv", skip = 10)
+EU_GDP<-EU_GDP %>%
+  rename(GDP = EA19LORSGPORGYSAM) %>%
+  rename(Date = observation_date)
+EU_GDP$Date <- as.Date(EU_GDP$Date)
+EU_GDP
+
+
 ```
 
 ```{r}
