@@ -69,11 +69,44 @@ plot(ts_EU_price_shorten)
 
 ```{r}
 n_for=12
-ts_EU_price_train<-subset(ts_EU_price,end=length(ts_EU_price)-n_for)
-ts_EU_price_test<-subset(ts_EU_price,start=length(ts_EU_price)-n_for)
-ts_EU_price_train %>% mstl() %>%
-autoplot()
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
+
 ```
+
+###### Model: ARIMA + FOURIER terms
+
+```{r}
+##without xreg
+
+fourier_mat<-fourier(ts_load_09,K=c(2,12),h=nrow(ts_load_09))
+##fourier_mat_for<-fourier(ts_load_09,K=c(2,12),h=31)
+##xregs_fourier<-cbind(fourier_mat,xregs_train)
+##xregs_for<-xregs_daily[(nrow(xregs_fourier)+1):(nrow(xregs_fourier)+31),]
+##xregs_fourier_for<-cbind(fourier_mat_for,xregs_for)
+  
+ARIMA_Four_fit_NG <- auto.arima(ts_EU_price_train, 
+                             seasonal=FALSE, 
+                             lambda=0,
+                             xreg=fourier(ts_EU_price_train,K=c(2,12))
+                             )
+
+#Forecast with ARIMA fit
+#also need to specify h for fourier terms
+ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
+                           xreg=fourier_mat_for,
+                           h=31
+                           ) 
+#Plot foresting results
+autoplot(ARIMA_Four_for) + ylab("Load")
+
+#Plot model + observed data
+autoplot(ts_load) +
+  autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("Load")
+```
+
+
 
 ```{r}
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
