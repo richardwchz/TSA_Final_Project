@@ -1,23 +1,4 @@
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
 library(readxl)
 library(lubridate)
@@ -36,6 +17,15 @@ library(kableExtra)
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
 EU_price$DATE<-as.Date(EU_price$DATE)
 EU_price
+
+EU_GDP<-read.csv(file="./Data/EU_GDP.csv", skip = 10)
+EU_GDP<-EU_GDP %>%
+  rename(GDP = EA19LORSGPORGYSAM) %>%
+  rename(Date = observation_date)
+EU_GDP$Date <- as.Date(EU_GDP$Date)
+EU_GDP
+
+
 ```
 
 ```{r}
@@ -62,16 +52,48 @@ ts_EU_price %>% mstl() %>%
 autoplot()
 ```
 ```{r}
-ts_EU_price_shorten <- ts(EU_price$Price,frequency=12,start=c(2004,09), end=c(2021,01))
+ts_EU_price_shorten <- ts(EU_price$Price[177:387],frequency=1)
 plot(ts_EU_price_shorten)
+```
+
+
+```{r}
+ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12)
+plot(ts_EU_price_shorten_withseas)
+```
+```{r}
+ts_EU_price_shorten_withseas %>% mstl() %>%
+autoplot()
 ```
 ```
 
 ```{r}
+ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
+plot(ts_EU_price_previous)
+```
+
+```{r}
+ts_EU_price_previous %>% mstl() %>%
+autoplot()
+```
+
+```{r}
+ts_EU_price_shorten %>% mstl() %>%
+autoplot()
+```
+
+```{r}
 n_for=12
+<<<<<<< HEAD
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
 
+=======
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
+ts_EU_price_train %>% mstl() %>%
+autoplot()
+>>>>>>> 36f08616d7b7286d19fb1d1348c5b4d3ebc02fc7
 ```
 
 ###### Model: ARIMA + FOURIER terms
