@@ -64,7 +64,7 @@ plot(ts_EU_price_shorten_withseas)
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
-```
+
 ```
 
 ```{r}
@@ -87,9 +87,8 @@ n_for=12
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
 
-ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
-ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
-
+season_train<-subset(ts_EU_price_shorten_withseas,end=length(ts_EU_price_shorten)-n_for)
+season_test<-subset(ts_EU_price_shorten_withseas,start=length(ts_EU_price_shorten)-n_for+1)
 
 ```
 
@@ -117,6 +116,29 @@ autoplot(ts_EU_price_shorten) +
   ylab("EU Natural Price")
 ```
 
+##model: ARIMA +FOURIER terms, using seasonal data
+
+```{r}
+ARIMA_Four_fit_season <- auto.arima(season_train, 
+                             seasonal=FALSE, 
+                             lambda=0,
+                             xreg=fourier(ts_EU_price_train,K=2)
+                             )
+
+#Forecast with ARIMA fit
+#also need to specify h for fourier terms
+ARIMA_Four_forcast_season <- forecast::forecast(ARIMA_Four_fit_season,
+                           xreg=fourier(season_train, K=2,
+                           h=1
+                           ) )
+#Plot foresting results
+autoplot(ARIMA_Four_forcast_season) + ylab("EU Natural Gas Price")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_withseas) +
+  autolayer(ARIMA_Four_forcast_season, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("EU Natural Price")
+```
 
 
 ```{r}
