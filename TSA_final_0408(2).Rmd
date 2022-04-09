@@ -25,7 +25,10 @@ EU_GDP<-EU_GDP %>%
 EU_GDP$Date <- as.Date(EU_GDP$Date)
 EU_GDP
 
-
+Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
+Consumption <- Consumption[,1:2]
+Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
+Consumption
 ```
 
 ```{r}
