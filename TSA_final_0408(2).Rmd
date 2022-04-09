@@ -25,10 +25,7 @@ EU_GDP<-EU_GDP %>%
 EU_GDP$Date <- as.Date(EU_GDP$Date)
 EU_GDP
 
-Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
-Consumption <- Consumption[,1:2]
-Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
-Consumption
+
 ```
 
 ```{r}
@@ -61,13 +58,15 @@ plot(ts_EU_price_shorten)
 
 
 ```{r}
-ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
+ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12)
 plot(ts_EU_price_shorten_withseas)
 ```
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
 ```
+```
+
 ```{r}
 ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
 plot(ts_EU_price_previous)
@@ -86,35 +85,17 @@ autoplot()
 ```{r}
 n_for=12
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
-<<<<<<< HEAD
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
 
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
 
 
-=======
-ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for)
-ts_EU_price_train %>% mstl() %>%
-autoplot()
->>>>>>> 184a615c6f5d4f6c1fc0f076672c367048077e17
-```
-```{r}
-ts_EU_price_shorten_withseas_14 <- ts(EU_price$Price[288:387],frequency=12,start=c(2014,01))
-plot(ts_EU_price_shorten_withseas_14)
 ```
 
 ###### Model: ARIMA + FOURIER terms
 
 ```{r}
-##without xreg
-
-fourier_mat<-fourier(ts_load_09,K=c(2,12),h=nrow(ts_load_09))
-##fourier_mat_for<-fourier(ts_load_09,K=c(2,12),h=31)
-##xregs_fourier<-cbind(fourier_mat,xregs_train)
-##xregs_for<-xregs_daily[(nrow(xregs_fourier)+1):(nrow(xregs_fourier)+31),]
-##xregs_fourier_for<-cbind(fourier_mat_for,xregs_for)
-  
 ARIMA_Four_fit_NG <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
                              lambda=0,
@@ -123,17 +104,17 @@ ARIMA_Four_fit_NG <- auto.arima(ts_EU_price_train,
 
 #Forecast with ARIMA fit
 #also need to specify h for fourier terms
-ARIMA_Four_forcast_NG <- forecast::forecast(ARIMA_Four_fit,
-                           xreg=fourier_mat_for,
-                           h=31
-                           ) 
+ARIMA_Four_forcast_NG <- forecast::forecast(ARIMA_Four_fit_NG,
+                           xreg=fourier(ts_EU_price_train, K=2,
+                           h=1
+                           ) )
 #Plot foresting results
-autoplot(ARIMA_Four_for) + ylab("Load")
+autoplot(ARIMA_Four_forcast_NG) + ylab("EU Natural Gas Price")
 
 #Plot model + observed data
-autoplot(ts_load) +
-  autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
-  ylab("Load")
+autoplot(ts_EU_price_shorten) +
+  autolayer(ARIMA_Four_forcast_NG, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("EU Natural Price")
 ```
 
 
@@ -142,41 +123,15 @@ autoplot(ts_load) +
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
 checkresiduals(SARIMA_autofit)
 ```
-```{r}
-n_for=12
-ts_EU_price_train2<-subset(ts_EU_price_shorten_withseas,end=length(ts_EU_price_shorten_withseas)-n_for)
-ts_EU_price_test2<-subset(ts_EU_price_shorten_withseas,start=length(ts_EU_price_shorten_withseas)-n_for)
-ts_EU_price_train2 %>% mstl() %>%
-autoplot()
-```
 
 ```{r}
-#Neural Network
-NN_fit <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2,K=2))
-
-#NN_for <- forecast(NN_fit, h=365) 
-NN_for <- forecast::forecast(NN_fit, h=365,xreg=fourier(ts_EU_price_train2, 
-                                          K=2,h=12))
-
-#Plot foresting results
-autoplot(NN_for) +
-  ylab("Active Power") 
-
-#Plot model + observed data
-autoplot(ts_EU_price_shorten_withseas) +
-  autolayer(NN_for, series="Neural Network",PI=FALSE)+
-  ylab("Active Power") 
-```
-
-
-```{r}
-ETS_fit <-  stlf(ts_EU_price_train2,h=12)
+ETS_fit <-  stlf(ts_EU_price_train,h=12)
 
 #Plot foresting results
 autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_withseas) +
+autoplot(ts_EU_price) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -198,7 +153,6 @@ autoplot(ts_EU_price) +
   autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
-
 ```{r}
 NN_fit2 <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2, K=2))
 
