@@ -25,7 +25,17 @@ EU_GDP<-EU_GDP %>%
 EU_GDP$Date <- as.Date(EU_GDP$Date)
 EU_GDP
 
+Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
+Consumption <- Consumption[,1:2]
+Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
+Consumption <- na.omit(Consumption)
+Consumption
 
+Import <- read_excel("./Data/Natual Gas Imports.xlsx")
+Import <- Import[,1:2]
+Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
+Import <- na.omit(Import)
+Import
 ```
 
 ```{r}
@@ -35,8 +45,23 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
 plot(ts_EU_price)
+```
+
+```{r}
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1961,03))
+plot(ts_EU_GDP)
+```
+
+```{r}
+ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
+plot(ts_consumption)
+```
+
+```{r}
+ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
+plot(ts_import)
 ```
 
 ```{r}
@@ -64,7 +89,10 @@ plot(ts_EU_price_shorten_withseas)
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 392590cf92dafea89a3ec39f94ca46cd16284ce0
 ```
 
 ```{r}
@@ -84,6 +112,7 @@ autoplot()
 
 ```{r}
 n_for=12
+<<<<<<< HEAD
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
 
@@ -141,6 +170,14 @@ autoplot(ts_EU_price_shorten_withseas) +
 ```
 
 
+=======
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
+ts_EU_price_train %>% mstl() %>%
+autoplot()
+```
+
+>>>>>>> 392590cf92dafea89a3ec39f94ca46cd16284ce0
 ```{r}
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
 checkresiduals(SARIMA_autofit)
