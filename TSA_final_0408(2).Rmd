@@ -50,7 +50,7 @@ plot(ts_EU_price)
 ```
 
 ```{r}
-ts_EU_GDP <- ts(EU_GDP$GDP,frequency=1,start=c(1961,03))
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1961,03))
 plot(ts_EU_GDP)
 ```
 
@@ -89,7 +89,6 @@ plot(ts_EU_price_shorten_withseas)
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
-```
 ```
 
 ```{r}
