@@ -84,16 +84,13 @@ autoplot()
 
 ```{r}
 n_for=12
-<<<<<<< HEAD
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
 
-=======
 ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
-ts_EU_price_train %>% mstl() %>%
-autoplot()
->>>>>>> 36f08616d7b7286d19fb1d1348c5b4d3ebc02fc7
+
+
 ```
 
 ###### Model: ARIMA + FOURIER terms
@@ -110,12 +107,12 @@ fourier_mat<-fourier(ts_load_09,K=c(2,12),h=nrow(ts_load_09))
 ARIMA_Four_fit_NG <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
                              lambda=0,
-                             xreg=fourier(ts_EU_price_train,K=c(2,12))
+                             xreg=fourier(ts_EU_price_train,K=2)
                              )
 
 #Forecast with ARIMA fit
 #also need to specify h for fourier terms
-ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
+ARIMA_Four_forcast_NG <- forecast::forecast(ARIMA_Four_fit,
                            xreg=fourier_mat_for,
                            h=31
                            ) 
