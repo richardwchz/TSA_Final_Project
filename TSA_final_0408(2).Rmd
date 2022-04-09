@@ -58,15 +58,13 @@ plot(ts_EU_price_shorten)
 
 
 ```{r}
-ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12)
+ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
 plot(ts_EU_price_shorten_withseas)
 ```
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
 ```
-```
-
 ```{r}
 ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
 plot(ts_EU_price_previous)
@@ -84,8 +82,8 @@ autoplot()
 
 ```{r}
 n_for=12
-ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
-ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for)
 ts_EU_price_train %>% mstl() %>%
 autoplot()
 ```
@@ -94,6 +92,31 @@ autoplot()
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
 checkresiduals(SARIMA_autofit)
 ```
+```{r}
+n_for=12
+ts_EU_price_train2<-subset(ts_EU_price_shorten_withseas,end=length(ts_EU_price_shorten_withseas)-n_for)
+ts_EU_price_test2<-subset(ts_EU_price_shorten_withseas,start=length(ts_EU_price_shorten_withseas)-n_for)
+ts_EU_price_train2 %>% mstl() %>%
+autoplot()
+```
+
+```{r}
+NN_fit <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2,K=2))
+
+#NN_for <- forecast(NN_fit, h=365) 
+NN_for <- forecast::forecast(NN_fit, h=365,xreg=fourier(ts_EU_price_train2, 
+                                          K=2,h=12))
+
+#Plot foresting results
+autoplot(NN_for) +
+  ylab("Active Power") 
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_withseas) +
+  autolayer(NN_for, series="Neural Network",PI=FALSE)+
+  ylab("Active Power") 
+```
+
 
 ```{r}
 ETS_fit <-  stlf(ts_EU_price_train,h=12)
@@ -124,6 +147,7 @@ autoplot(ts_EU_price) +
   autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
+
 ```{r}
 NN_fit2 <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2, K=2))
 
