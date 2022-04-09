@@ -45,8 +45,23 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
 plot(ts_EU_price)
+```
+
+```{r}
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=1,start=c(1961,03))
+plot(ts_EU_GDP)
+```
+
+```{r}
+ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
+plot(ts_consumption)
+```
+
+```{r}
+ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
+plot(ts_import)
 ```
 
 ```{r}
