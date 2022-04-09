@@ -87,6 +87,10 @@ ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n
 ts_EU_price_train %>% mstl() %>%
 autoplot()
 ```
+```{r}
+ts_EU_price_shorten_withseas_14 <- ts(EU_price$Price[288:387],frequency=12,start=c(2014,01))
+plot(ts_EU_price_shorten_withseas_14)
+```
 
 ```{r}
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
@@ -101,6 +105,7 @@ autoplot()
 ```
 
 ```{r}
+#Neural Network
 NN_fit <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2,K=2))
 
 #NN_for <- forecast(NN_fit, h=365) 
@@ -119,13 +124,13 @@ autoplot(ts_EU_price_shorten_withseas) +
 
 
 ```{r}
-ETS_fit <-  stlf(ts_EU_price_train,h=12)
+ETS_fit <-  stlf(ts_EU_price_train2,h=12)
 
 #Plot foresting results
 autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
-autoplot(ts_EU_price) +
+autoplot(ts_EU_price_shorten_withseas) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
