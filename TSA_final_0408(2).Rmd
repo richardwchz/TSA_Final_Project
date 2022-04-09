@@ -33,6 +33,7 @@ Consumption
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:2]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
+Import <- na.omit(Import)
 Import
 ```
 
