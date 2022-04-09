@@ -28,7 +28,14 @@ EU_GDP
 Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
+Consumption <- na.omit(Consumption)
 Consumption
+
+Import <- read_excel("./Data/Natual Gas Imports.xlsx")
+Import <- Import[,1:2]
+Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
+Import <- na.omit(Import)
+Import
 ```
 
 ```{r}
@@ -38,8 +45,23 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
 plot(ts_EU_price)
+```
+
+```{r}
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1961,03))
+plot(ts_EU_GDP)
+```
+
+```{r}
+ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
+plot(ts_consumption)
+```
+
+```{r}
+ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
+plot(ts_import)
 ```
 
 ```{r}
@@ -61,13 +83,18 @@ plot(ts_EU_price_shorten_200409_202203)
 
 
 ```{r}
+<<<<<<< HEAD
 ts_EU_price_shorten_withseas_200409_202112 <- ts(EU_price$Price[177:384],frequency=12,start=c(2004,09))
+=======
+ts_EU_price_shorten_withseas <- ts(EU_price$Price[177:387],frequency=12)
+>>>>>>> c81a5dca34c229b5cc8f8029ec76b02cfc5e7da9
 plot(ts_EU_price_shorten_withseas)
 ```
 ```{r}
 ts_EU_price_shorten_200409_202203 %>% mstl() %>%
 autoplot()
 ```
+
 ```{r}
 #ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
 #plot(ts_EU_price_previous)
@@ -84,6 +111,7 @@ autoplot()
 ```
 
 ```{r}
+<<<<<<< HEAD
 n_for=3
 ts_EU_price_train<-subset(ts_EU_price_shorten_200409_202203,end=length(ts_EU_price_shorten_200409_202203)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten_200409_202203,start=length(ts_EU_price_shorten_200409_202203)-n_for)
@@ -128,12 +156,32 @@ autoplot(ts_EU_price_shorten_200409_202203) +
 ```
 ```{r}
 ETS_fit <-  stlf(ts_EU_price_train,h=3)
+=======
+n_for=12
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
+ts_EU_price_train %>% mstl() %>%
+autoplot()
+```
+
+```{r}
+SARIMA_autofit <- auto.arima(ts_EU_price_train)
+checkresiduals(SARIMA_autofit)
+```
+
+```{r}
+ETS_fit <-  stlf(ts_EU_price_train,h=12)
+>>>>>>> c81a5dca34c229b5cc8f8029ec76b02cfc5e7da9
 
 #Plot foresting results
 autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
+<<<<<<< HEAD
 autoplot(ts_EU_price_shorten_200409_202203) +
+=======
+autoplot(ts_EU_price) +
+>>>>>>> c81a5dca34c229b5cc8f8029ec76b02cfc5e7da9
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -214,6 +262,33 @@ ts_EU_price_train2 %>% mstl() %>%
 autoplot()
 ```
 
+<<<<<<< HEAD
+=======
+#Plot foresting results
+autoplot(ETS_fit2) + ylab("EU NG Price")
+
+#Plot model + observed data
+autoplot(ts_EU_price) +
+  autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
+  ylab("Active Power")
+```
+```{r}
+NN_fit2 <- nnetar(ts_EU_price_train2,p=1,P=0,xreg=fourier(ts_EU_price_train2, K=2))
+
+#NN_for <- forecast(NN_fit, h=365) 
+NN_for2 <- forecast::forecast(NN_fit2, h=365,xreg=fourier(ts_EU_price_train2, 
+                                          K=2,h=12))
+
+#Plot foresting results
+autoplot(NN_for2) +
+  ylab("Active Power") 
+
+#Plot model + observed data
+autoplot(ts_EU_price) +
+  autolayer(NN_for2, series="Neural Network",PI=FALSE)+
+  ylab("Active Power") 
+```
+>>>>>>> c81a5dca34c229b5cc8f8029ec76b02cfc5e7da9
 
 
 
