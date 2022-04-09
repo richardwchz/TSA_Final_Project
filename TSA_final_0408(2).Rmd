@@ -25,17 +25,7 @@ EU_GDP<-EU_GDP %>%
 EU_GDP$Date <- as.Date(EU_GDP$Date)
 EU_GDP
 
-Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
-Consumption <- Consumption[,1:2]
-Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
-Consumption <- na.omit(Consumption)
-Consumption
 
-Import <- read_excel("./Data/Natual Gas Imports.xlsx")
-Import <- Import[,1:2]
-Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
-Import <- na.omit(Import)
-Import
 ```
 
 ```{r}
@@ -45,23 +35,8 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
 plot(ts_EU_price)
-```
-
-```{r}
-ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1961,03))
-plot(ts_EU_GDP)
-```
-
-```{r}
-ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
-plot(ts_consumption)
-```
-
-```{r}
-ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
-plot(ts_import)
 ```
 
 ```{r}
@@ -89,6 +64,7 @@ plot(ts_EU_price_shorten_withseas)
 ```{r}
 ts_EU_price_shorten_withseas %>% mstl() %>%
 autoplot()
+
 ```
 
 ```{r}
@@ -108,11 +84,62 @@ autoplot()
 
 ```{r}
 n_for=12
-ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price)-n_for)
-ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price)-n_for)
-ts_EU_price_train %>% mstl() %>%
-autoplot()
+ts_EU_price_train<-subset(ts_EU_price_shorten,end=length(ts_EU_price_shorten)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten,start=length(ts_EU_price_shorten)-n_for+1)
+
+season_train<-subset(ts_EU_price_shorten_withseas,end=length(ts_EU_price_shorten)-n_for)
+season_test<-subset(ts_EU_price_shorten_withseas,start=length(ts_EU_price_shorten)-n_for+1)
+
 ```
+
+###### Model: ARIMA + FOURIER terms
+
+```{r}
+ARIMA_Four_fit_NG <- auto.arima(ts_EU_price_train, 
+                             seasonal=FALSE, 
+                             lambda=0,
+                             xreg=fourier(ts_EU_price_train,K=2)
+                             )
+
+#Forecast with ARIMA fit
+#also need to specify h for fourier terms
+ARIMA_Four_forcast_NG <- forecast::forecast(ARIMA_Four_fit_NG,
+                           xreg=fourier(ts_EU_price_train, K=2,
+                           h=1
+                           ) )
+#Plot foresting results
+autoplot(ARIMA_Four_forcast_NG) + ylab("EU Natural Gas Price")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten) +
+  autolayer(ARIMA_Four_forcast_NG, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("EU Natural Price")
+```
+
+##model: ARIMA +FOURIER terms, using seasonal data
+
+```{r}
+ARIMA_Four_fit_season <- auto.arima(season_train, 
+                             seasonal=FALSE, 
+                             lambda=0,
+                             xreg=fourier(ts_EU_price_train,K=2)
+                             )
+
+#Forecast with ARIMA fit
+#also need to specify h for fourier terms
+ARIMA_Four_forcast_season <- forecast::forecast(ARIMA_Four_fit_season,
+                           xreg=fourier(season_train, K=2,
+                           h=1
+                           ) )
+#Plot foresting results
+autoplot(ARIMA_Four_forcast_season) + ylab("EU Natural Gas Price")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_withseas) +
+  autolayer(ARIMA_Four_forcast_season, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("EU Natural Price")
+```
+
 
 ```{r}
 SARIMA_autofit <- auto.arima(ts_EU_price_train)
