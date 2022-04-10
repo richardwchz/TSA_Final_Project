@@ -306,8 +306,6 @@ for(s in 2:nscen){
   lines(Y[i,,s],col="gray")   #adding lines to the plot corresponding to all scenarios
 } 
 ```
-```
-
 
 
 ```{r}
