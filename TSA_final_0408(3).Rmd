@@ -57,11 +57,15 @@ plot(ts_EU_GDP)
 ```{r}
 ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
 plot(ts_consumption)
+ts_consumption %>% mstl() %>%
+autoplot()
 ```
 
 ```{r}
 ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
 plot(ts_import)
+ts_import %>% mstl() %>%
+autoplot()
 ```
 
 ```{r}
