@@ -54,24 +54,35 @@ print(pettittTest)
 ts_EU_price %>% mstl() %>%
 autoplot()
 ```
+
+
+
 ```{r}
-ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[288:387],frequency=12,start=c(2004,09))
+ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
 plot(ts_EU_price_shorten_200409_202203)
 ```
-
-
 ```{r}
-ts_EU_price_shorten_withseas_200409_202112 <- ts(EU_price$Price[177:384],frequency=12,start=c(2004,09))
-plot(ts_EU_price_shorten_withseas)
+pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
+print(pettittTest2)
 ```
+#THere is another change in trend happening at 2014.07
+
 ```{r}
-ts_EU_price_shorten_200409_202203 %>% mstl() %>%
+ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
+plot(ts_EU_price_shorten_201407_202203)
+```
+
+```{r}
+ts_EU_price_shorten_201407_202203 %>% mstl() %>%
 autoplot()
 ```
 ```{r}
-#ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
-#plot(ts_EU_price_previous)
+  par(mfrow=c(1,2))  #place plot side by side
+Acf(ts_EU_price_shorten_201407_202203,lag.max=40,main="ACF of Price")
+Pacf(ts_EU_price_shorten_201407_202203,lag.max=40,main="PACF of Price")
 ```
+
+
 
 ```{r}
 #ts_EU_price_previous %>% mstl() %>%
@@ -85,8 +96,8 @@ autoplot()
 
 ```{r}
 n_for=3
-ts_EU_price_train<-subset(ts_EU_price_shorten_200409_202203,end=length(ts_EU_price_shorten_200409_202203)-n_for)
-ts_EU_price_test<-subset(ts_EU_price_shorten_200409_202203,start=length(ts_EU_price_shorten_200409_202203)-n_for)
+ts_EU_price_train<-subset(ts_EU_price_shorten_201407_202203,end=length(ts_EU_price_shorten_201407_202203)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten_201407_202203,start=length(ts_EU_price_shorten_201407_202203)-n_for)
 ts_EU_price_train %>% mstl() %>%
 autoplot()
 ```
@@ -122,7 +133,7 @@ autoplot(NN_for) +
   ylab("Active Power") 
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for, series="Neural Network",PI=FALSE)+
   ylab("Active Power") 
 ```
@@ -133,7 +144,7 @@ ETS_fit <-  stlf(ts_EU_price_train,h=3)
 autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -148,7 +159,7 @@ autoplot(TBATS_for) +
   ylab("Active Power") 
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(TBATS_for, series="TBATS",PI=FALSE)+
   ylab("Active Power") 
 ```
@@ -156,18 +167,18 @@ autoplot(ts_EU_price_shorten_200409_202203) +
 
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
-                             lambda=0,
-                             xreg=fourier(ts_EU_price_train, 
-                                          K=2)
+                             lambda=0
+                             #xreg=fourier(ts_EU_price_train, 
+                                          #K=2)
                              )
 #k is the max value to get for each seasonal period.
 #Forecast with ARIMA fit
 #also need to specify h for fourier terms
 
 ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
-                           xreg=fourier(ts_EU_price_train,
-                                        K=2,
-                                        h=3),
+                           #xreg=fourier(ts_EU_price_train,
+                                       # K=2,
+                                        #h=3),
                            h=3
                            ) 
 
@@ -175,7 +186,7 @@ ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
 autoplot(ARIMA_Four_for) + ylab("Active Power")
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -214,16 +225,94 @@ ts_EU_price_train2 %>% mstl() %>%
 autoplot()
 ```
 
-
-
-
 ```{r}
-SARIMA_autofit_shorten <- auto.arima(ts_EU_price_shorten)
-checkresiduals(SARIMA_autofit_shorten)
+autoplot(ts_EU_price_test) +
+  autolayer(ETS_fit, PI=FALSE, series="STL+ETS") +
+  autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA + Fourier") +
+  autolayer(TBATS_for,PI=FALSE, series="TBATS") +
+  autolayer(NN_for,PI=FALSE, series="NN") +
+  ylab("Daily Active Power") +
+  guides(colour=guide_legend(title="Forecast"))
 ```
+#Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
+
 ```{r}
-ts_EU_price_shorten %>% mstl() %>%
-autoplot()
+
+#Calculating correlation matrix R and Cholesky decomposition R
+R = cor(ts_EU_price_noseas_201407_202203,ts_EU_price_noseas_201407_202203)
+U=chol(R) #that will give upper triangular matrix for Cholesky decomposition
+L=t(U) #to get lower triangular matrix you need to transpose U, that is what the t() function is doing here
+
+#fit the seasonal ARIMA to the each basin
+horizon=12  #we want to forecast one year ahead in monthly steps
+nscen=10    #number of scenarios to be generated 
+
+X=array(0,c(1,horizon,nscen)) #initial array with independently generated scenarios 
+
+# Need to do a loop over all HPP under analysis or repeat process 3 times
+#for(i in 1:nhydro){  
+  
+  # Fit a SARIMA model
+  # Note I am fixing a few parameters regarding the order of the model 
+  # just to help auto.arima() converge faster
+  
+  fit_SARIMA=auto.arima(ts_EU_price_noseas_201407_202203,max.d=1,max.D=1,max.p=1,max.P=1,max.Q=1) 
+  
+  for_SARIMA=forecast::forecast(fit_SARIMA, h=horizon)   #forecast using the fitted SARIMA
+  
+  #Generating scenarios
+  #for(t in 1:horizon){
+    # Forecast function does not directly output the standard error other will
+    # So I will use the following expression to manually compute sd
+    sd=(for_SARIMA$upper[t,1] - for_SARIMA$lower[t,1]) / (2 * qnorm(.5 + for_SARIMA$level[1] / 200))
+    
+    # Now that I have mean and standard deviation for time t
+    # I can draw scenarios using the rnorm() function
+    X[i,t,]=rnorm(nscen,mean=for_SARIMA$mean[t],sd=sd)  
+    
+    #note this is done in a loop for all the 24 steps we are forecasting 
+    #and this loop is inside a loop over all HPP
+    
+  #} # end t loop
+
+  # remove models just to make sure we start from scratch for the next HPP
+  # remember we are still inside the HPP loop
+  rm(fit_SARIMA, for_SARIMA) 
+                            
+#}#end HPP loop
+
+#Creating array Y where we will store correlated scenarios
+Y=array(0,c(1,horizon,nscen)) 
+
+# Need to use another loop structure to make sure spatial correlation among HPP is present in all scenarios
+for(s in 1:nscen){ 
+  aux=exp(X[,,s]) #creating aux variable simple because X is not a 2x2 matrix, 
+                  #but an array of 3 dimension and we cannot do matrix multiplication with arrays
+  
+  Y[,,s]=L%*%aux  #recall L is the Cholesky decomposition of our correlation matrix R computed from with historical data
+
+}#end scenario loop
+
+#Just to illustrate what we have done let's plot the scenarios for the first HPP
+i=1
+t=1:horizon
+
+#getting min and max values of Y to make sure all scenarios will be within the plot limits 
+ymax=max(Y[i,,])
+ymin=min(Y[i,,])
+plot(Y[i,t,1],col="gray",type="l",ylim=c(ymin,ymax),xaxt='n',xlab="") #plotting first scenario
+axis(1,at=c(1,13),labels=c("2011","2012"))
+for(s in 2:nscen){
+  lines(Y[i,,s],col="gray")   #adding lines to the plot corresponding to all scenarios
+} 
+```
+```
+
+
+
+```{r}
+#SARIMA_autofit_shorten <- auto.arima(ts_EU_price_shorten_201407_202203)
+#checkresiduals(SARIMA_autofit_shorten)
 ```
 
 
