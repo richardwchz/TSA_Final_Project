@@ -15,7 +15,7 @@ library(kableExtra)
 
 ```{r}
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
-EU_price$DATE<-as.Date(EU_price$DATE)
+EU_price$Date<-as.Date(EU_price$Date)
 EU_price
 
 EU_GDP<-read.csv(file="./Data/EU_GDP.csv", skip = 10)
@@ -45,7 +45,7 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
 plot(ts_EU_price)
 ```
 
@@ -91,16 +91,6 @@ plot(ts_EU_price_shorten_200409_202203)
 ```
 
 ```{r}
-merged_ts <- ts(c(ts_EU_price_shorten_200409_202203,ts_consumption),               
-   start = start(ts_EU_price_shorten_200409_202203),
-   frequency = frequency(ts_EU_price_shorten_200409_202203))
-merged_ts
-
-```
-
-
-
-```{r}
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
@@ -120,7 +110,9 @@ ts_EU_price_shorten_201407_202101 <- ts(EU_price$Price[295:372],frequency=12,sta
 ts_EU_price_shorten_201407_202101 %>% mstl() %>%
 autoplot()
 SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202101)
-checkresiduals(ts_EU_price_shorten_201407_202101)
+SARIMA_autofit
+checkresiduals(SARIMA_autofit)
+ts_EU_price_shorten_201407_202101
 ```
 
 ```{r}
@@ -283,82 +275,3 @@ autoplot(ts_EU_price_test) +
 ```
 #Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
 
-```{r}
-
-#Calculating correlation matrix R and Cholesky decomposition R
-R = cor(ts_EU_price_noseas_201407_202203,ts_EU_price_noseas_201407_202203)
-U=chol(R) #that will give upper triangular matrix for Cholesky decomposition
-L=t(U) #to get lower triangular matrix you need to transpose U, that is what the t() function is doing here
-
-#fit the seasonal ARIMA to the each basin
-horizon=12  #we want to forecast one year ahead in monthly steps
-nscen=10    #number of scenarios to be generated 
-
-X=array(0,c(1,horizon,nscen)) #initial array with independently generated scenarios 
-
-# Need to do a loop over all HPP under analysis or repeat process 3 times
-#for(i in 1:nhydro){  
-  
-  # Fit a SARIMA model
-  # Note I am fixing a few parameters regarding the order of the model 
-  # just to help auto.arima() converge faster
-  
-  fit_SARIMA=auto.arima(ts_EU_price_noseas_201407_202203,max.d=1,max.D=1,max.p=1,max.P=1,max.Q=1) 
-  
-  for_SARIMA=forecast::forecast(fit_SARIMA, h=horizon)   #forecast using the fitted SARIMA
-  
-  #Generating scenarios
-  #for(t in 1:horizon){
-    # Forecast function does not directly output the standard error other will
-    # So I will use the following expression to manually compute sd
-    sd=(for_SARIMA$upper[t,1] - for_SARIMA$lower[t,1]) / (2 * qnorm(.5 + for_SARIMA$level[1] / 200))
-    
-    # Now that I have mean and standard deviation for time t
-    # I can draw scenarios using the rnorm() function
-    X[i,t,]=rnorm(nscen,mean=for_SARIMA$mean[t],sd=sd)  
-    
-    #note this is done in a loop for all the 24 steps we are forecasting 
-    #and this loop is inside a loop over all HPP
-    
-  #} # end t loop
-
-  # remove models just to make sure we start from scratch for the next HPP
-  # remember we are still inside the HPP loop
-  rm(fit_SARIMA, for_SARIMA) 
-                            
-#}#end HPP loop
-
-#Creating array Y where we will store correlated scenarios
-Y=array(0,c(1,horizon,nscen)) 
-
-# Need to use another loop structure to make sure spatial correlation among HPP is present in all scenarios
-for(s in 1:nscen){ 
-  aux=exp(X[,,s]) #creating aux variable simple because X is not a 2x2 matrix, 
-                  #but an array of 3 dimension and we cannot do matrix multiplication with arrays
-  
-  Y[,,s]=L%*%aux  #recall L is the Cholesky decomposition of our correlation matrix R computed from with historical data
-
-}#end scenario loop
-
-#Just to illustrate what we have done let's plot the scenarios for the first HPP
-i=1
-t=1:horizon
-
-#getting min and max values of Y to make sure all scenarios will be within the plot limits 
-ymax=max(Y[i,,])
-ymin=min(Y[i,,])
-plot(Y[i,t,1],col="gray",type="l",ylim=c(ymin,ymax),xaxt='n',xlab="") #plotting first scenario
-axis(1,at=c(1,13),labels=c("2011","2012"))
-for(s in 2:nscen){
-  lines(Y[i,,s],col="gray")   #adding lines to the plot corresponding to all scenarios
-} 
-```
-
-
-```{r}
-#SARIMA_autofit_shorten <- auto.arima(ts_EU_price_shorten_201407_202203)
-#checkresiduals(SARIMA_autofit_shorten)
-```
-
-
->>>>>>> 8aa792f8744c4094aedd7b04676e373d7598503e
