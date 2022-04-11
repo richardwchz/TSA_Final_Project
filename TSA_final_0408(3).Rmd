@@ -15,7 +15,7 @@ library(kableExtra)
 
 ```{r}
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
-EU_price$DATE<-as.Date(EU_price$DATE)
+EU_price$Date<-as.Date(EU_price$Date)
 EU_price
 
 EU_GDP<-read.csv(file="./Data/EU_GDP_nominal.csv")
@@ -46,7 +46,7 @@ tail(EU_price)
 ```
 
 ```{r}
-ts_EU_price <- ts(EU_price$Price,frequency=1,start=c(1990,01))
+ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
 plot(ts_EU_price)
 ```
 
@@ -58,11 +58,20 @@ plot(ts_EU_GDP)
 ```{r}
 ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
 plot(ts_consumption)
+ts_consumption %>% mstl() %>%
+autoplot()
 ```
+
+
 
 ```{r}
 ts_import <- ts(Import$Import,frequency=12,start=c(2014,01))
 plot(ts_import)
+ts_import %>% mstl() %>%
+autoplot()
+```
+```{r}
+
 ```
 
 ```{r}
@@ -77,24 +86,53 @@ print(pettittTest)
 ts_EU_price %>% mstl() %>%
 autoplot()
 ```
+
+
+
 ```{r}
-ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[288:387],frequency=12,start=c(2004,09))
+ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
 plot(ts_EU_price_shorten_200409_202203)
 ```
 
+```{r}
+pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
+print(pettittTest2)
+```
+#THere is another change in trend happening at 2014.07
 
 ```{r}
-ts_EU_price_shorten_withseas_200409_202112 <- ts(EU_price$Price[177:384],frequency=12,start=c(2004,09))
-plot(ts_EU_price_shorten_withseas)
+ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
+plot(ts_EU_price_shorten_201407_202203)
 ```
+
 ```{r}
-ts_EU_price_shorten_200409_202203 %>% mstl() %>%
+ts_EU_price_shorten_201407_202203 %>% mstl() %>%
 autoplot()
 ```
 ```{r}
-#ts_EU_price_previous <- ts(EU_price$Price[1:177],frequency=12)
-#plot(ts_EU_price_previous)
+df_cor<-cbind(EU_price$Price,EU_GDP$GDP,Consumption$Consumption,Import$Import)
+head(df_cor)
+cor(df_cor)
 ```
+
+
+```{r}
+ts_EU_price_shorten_201407_202101 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
+ts_EU_price_shorten_201407_202101 %>% mstl() %>%
+autoplot()
+SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202101)
+SARIMA_autofit
+checkresiduals(SARIMA_autofit)
+ts_EU_price_shorten_201407_202101
+```
+
+```{r}
+par(mfrow=c(1,2))  #place plot side by side
+Acf(ts_EU_price_shorten_201407_202203,lag.max=40,main="ACF of Price")
+Pacf(ts_EU_price_shorten_201407_202203,lag.max=40,main="PACF of Price")
+```
+
+
 
 ```{r}
 #ts_EU_price_previous %>% mstl() %>%
@@ -108,8 +146,8 @@ autoplot()
 
 ```{r}
 n_for=3
-ts_EU_price_train<-subset(ts_EU_price_shorten_200409_202203,end=length(ts_EU_price_shorten_200409_202203)-n_for)
-ts_EU_price_test<-subset(ts_EU_price_shorten_200409_202203,start=length(ts_EU_price_shorten_200409_202203)-n_for)
+ts_EU_price_train<-subset(ts_EU_price_shorten_201407_202203,end=length(ts_EU_price_shorten_201407_202203)-n_for)
+ts_EU_price_test<-subset(ts_EU_price_shorten_201407_202203,start=length(ts_EU_price_shorten_201407_202203)-n_for)
 ts_EU_price_train %>% mstl() %>%
 autoplot()
 ```
@@ -145,7 +183,7 @@ autoplot(NN_for) +
   ylab("Active Power") 
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for, series="Neural Network",PI=FALSE)+
   ylab("Active Power") 
 ```
@@ -156,7 +194,7 @@ ETS_fit <-  stlf(ts_EU_price_train,h=3)
 autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -171,7 +209,7 @@ autoplot(TBATS_for) +
   ylab("Active Power") 
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(TBATS_for, series="TBATS",PI=FALSE)+
   ylab("Active Power") 
 ```
@@ -179,18 +217,18 @@ autoplot(ts_EU_price_shorten_200409_202203) +
 
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
-                             lambda=0,
-                             xreg=fourier(ts_EU_price_train, 
-                                          K=2)
+                             lambda=0
+                             #xreg=fourier(ts_EU_price_train, 
+                                          #K=2)
                              )
 #k is the max value to get for each seasonal period.
 #Forecast with ARIMA fit
 #also need to specify h for fourier terms
 
 ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
-                           xreg=fourier(ts_EU_price_train,
-                                        K=2,
-                                        h=3),
+                           #xreg=fourier(ts_EU_price_train,
+                                       # K=2,
+                                        #h=3),
                            h=3
                            ) 
 
@@ -198,7 +236,7 @@ ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
 autoplot(ARIMA_Four_for) + ylab("Active Power")
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_200409_202203) +
+autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
   ylab("Active Power")
 ```
@@ -231,23 +269,20 @@ cat("The best model by RMSE is:", row.names(scores[best_model_index,]))
 
 ```{r}
 #Include the upward
-ts_EU_price_train2<-subset(ts_EU_price,end=length(ts_EU_price)-2)
-ts_EU_price_test2<-subset(ts_EU_price,start=length(ts_EU_price)-2)
-ts_EU_price_train2 %>% mstl() %>%
-autoplot()
+#ts_EU_price_train2<-subset(ts_EU_price,end=length(ts_EU_price)-2)
+#ts_EU_price_test2<-subset(ts_EU_price,start=length(ts_EU_price)-2)
+#ts_EU_price_train2 %>% mstl() %>%
+#autoplot()
 ```
-
-
-
 
 ```{r}
-SARIMA_autofit_shorten <- auto.arima(ts_EU_price_shorten)
-checkresiduals(SARIMA_autofit_shorten)
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(ETS_fit, PI=FALSE, series="STL+ETS") +
+  autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA + Fourier") +
+  autolayer(TBATS_for,PI=FALSE, series="TBATS") +
+  autolayer(NN_for,PI=FALSE, series="NN") +
+  ylab("EU NG Price ($/MMBtu)") +
+  guides(colour=guide_legend(title="Forecast"))
 ```
-```{r}
-ts_EU_price_shorten %>% mstl() %>%
-autoplot()
-```
+#Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
 
-
->>>>>>> 8aa792f8744c4094aedd7b04676e373d7598503e
