@@ -51,7 +51,7 @@ plot(ts_EU_price)
 ```
 
 ```{r}
-ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1961,03))
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1995,01))
 plot(ts_EU_GDP)
 ```
 
@@ -70,9 +70,7 @@ plot(ts_import)
 ts_import %>% mstl() %>%
 autoplot()
 ```
-```{r}
 
-```
 
 ```{r}
 library(trend)
