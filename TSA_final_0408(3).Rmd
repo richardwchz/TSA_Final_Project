@@ -219,8 +219,6 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
                              lambda=0
-                             #xreg=fourier(ts_EU_price_train, 
-                                          #K=2)
                              )
 #k is the max value to get for each seasonal period.
 #Forecast with ARIMA fit
@@ -242,7 +240,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   ylab("Active Power")
 ```
 
-```{r}
+```{r ARIMA+GDP}
 ARIMA_Four_fit_withGDP <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
                              lambda=0,
