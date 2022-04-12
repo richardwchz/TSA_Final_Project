@@ -37,6 +37,14 @@ Import <- Import[,1:2]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
 Import <- na.omit(Import)
 Import
+
+scenarios <- read.csv("./Data/GDP_scenario.csv")
+scenarios$Date <- as.Date(paste(scenarios$Date,"-01",sep=""))
+scenarios
+scenario1 <- scenarios$scenario_1
+scenario2 <- scenarios$scenario_2
+scenario3 <- scenarios$scenario_3
+
 ```
 
 ```{r}
