@@ -45,6 +45,13 @@ scenario1 <- scenarios$scenario_1
 scenario2 <- scenarios$scenario_2
 scenario3 <- scenarios$scenario_3
 
+import_forecast <- read.csv("./Data/Import_forecast.csv")
+import_forecast$Date <- as.Date(paste(import_forecast$Date,"-01",sep=""))
+import_forecast
+forecast1 <- import_forecast$scenario_1
+forecast2 <- import_forecast$scenario_2
+forecast3 <- import_forecast$scenario_3
+
 ```
 
 ```{r}
