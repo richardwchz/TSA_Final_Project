@@ -193,7 +193,7 @@ NN_for <- forecast::forecast(NN_fit, h=3,xreg=fourier(ts_EU_price_train,
                                           K=2,h=3))
 
 #Plot foresting results
-autoplot(NN_for, show_gap=FALSE) +
+autoplot(NN_for) + autolayer(NN_for, showgap=F) +
   ylab("Active Power") 
 
 #Plot model + observed data
@@ -206,7 +206,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ETS_fit <-  stlf(ts_EU_price_train,h=3)
 
 #Plot foresting results
-autoplot(ETS_fit) + ylab("EU NG Price")
+autoplot(ETS_fit) + autolayer(ETS_fit, showgap=F) + ylab("EU NG Price")
+
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -220,7 +221,7 @@ TBATS_fit <- tbats(ts_EU_price_train)
 TBATS_for <- forecast::forecast(TBATS_fit, h=3)
 
 #Plot foresting results
-autoplot(TBATS_for) +
+autoplot(TBATS_for) + autolayer(TBATS_for, showgap=F) +
   ylab("EU NG Price") 
 
 #Plot model + observed data
@@ -246,7 +247,7 @@ ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
                            ) 
 
 #Plot foresting results
-autoplot(ARIMA_Four_for) + ylab("EU NG Price")
+autoplot(ARIMA_Four_for) + autolayer(ARIMA_Four_for, showgap=F) + ylab("EU NG Price")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -267,7 +268,7 @@ ARIMA_Four_for_withGDP <- forecast::forecast(ARIMA_Four_fit_withGDP,
                            ) 
 
 #Plot foresting results
-autoplot(ARIMA_Four_for_withGDP) + ylab("Active Power")
+autoplot(ARIMA_Four_for_withGDP) + autolayer(ARIMA_Four_for_withGDP, showgap=F) + ylab("Active Power")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -285,7 +286,7 @@ ARIMA_Four_for_withImport <- forecast::forecast(ARIMA_Four_fit_withImport,
                            ) 
 checkresiduals(ARIMA_Four_fit_withImport)
 #Plot foresting results
-autoplot(ARIMA_Four_for_withImport) + ylab("Active Power")
+autoplot(ARIMA_Four_for_withImport) + autolayer(ARIMA_Four_for_withImport, showgap=F) + ylab("Active Power")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -389,7 +390,7 @@ kbl(scores,
 ETS_fit2 <-  stlf(ts_EU_price_shorten_201407_202203,h=12)
 
 #Plot foresting results
-autoplot(ETS_fit2) + ylab("EU NG Price")
+autoplot(ETS_fit2) + autolayer(ETS_fit2, showgap=F) + ylab("EU NG Price")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
