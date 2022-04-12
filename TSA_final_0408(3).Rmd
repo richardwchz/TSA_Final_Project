@@ -59,7 +59,11 @@ plot(ts_EU_price)
 ```
 
 ```{r}
+
+ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1995,01))
+
 ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1960,03))
+
 plot(ts_EU_GDP)
 ```
 
@@ -78,9 +82,7 @@ plot(ts_import)
 ts_import %>% mstl() %>%
 autoplot()
 ```
-```{r}
 
-```
 
 ```{r}
 library(trend)
@@ -118,14 +120,13 @@ ts_EU_price_shorten_201407_202203 %>% mstl() %>%
 autoplot()
 ```
 ```{r}
-df_cor<-cbind(EU_price$Price,EU_GDP$GDP,Consumption$Consumption,Import$Import)
-head(df_cor)
+df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import)
 cor(df_cor)
 ```
 
 
 ```{r}
-ts_EU_price_shorten_201407_202101 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
+ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
 ts_EU_price_shorten_201407_202101 %>% mstl() %>%
 autoplot()
 SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202101)
@@ -226,8 +227,6 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
                              lambda=0
-                             #xreg=fourier(ts_EU_price_train, 
-                                          #K=2)
                              )
 #k is the max value to get for each seasonal period.
 #Forecast with ARIMA fit
@@ -248,6 +247,35 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
   ylab("Active Power")
 ```
+
+```{r ARIMA+GDP}
+ARIMA_Four_fit_withGDP <- auto.arima(ts_EU_price_train, 
+                             seasonal=FALSE, 
+                             lambda=0,
+                             xreg=ts_EU_GDP[652:741]
+                             )
+#k is the max value to get for each seasonal period.
+#Forecast with ARIMA fit
+#also need to specify h for fourier terms
+
+ARIMA_Four_for_withGDP <- forecast::forecast(ARIMA_Four_fit_withGDP,
+                           xreg=ts_EU_GDP[738:741],
+                           h=3
+                           ) 
+
+#Plot foresting results
+autoplot(ARIMA_Four_for_withGDP) + ylab("Active Power")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(ARIMA_Four_for_withGDP, series="ARIMA_FOURIER",PI=FALSE) +
+  ylab("Active Power")
+```
+
+
+
+
+
 ```{r}
 #Model 1: STL + ETS
 ETS_scores <- accuracy(ETS_fit$mean,ts_EU_price_test)  
@@ -292,5 +320,26 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   ylab("EU NG Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Forecast"))
 ```
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+kbl(scores, 
+      caption = "Forecast Accuracy for EU NG Price",
+      digits = array(5,ncol(scores))) %>%
+  kable_styling(full_width = FALSE, position = "center", latex_options = "hold_position") %>%
+  #highlight model with lowest RMSE
+  kable_styling(latex_options="striped", stripe_index = which.min(scores[,"RMSE"]))
+```
+
+```{r}
+ETS_fit2 <-  stlf(ts_EU_price,h=12)
+
+#Plot foresting results
+autoplot(ETS_fit2) + ylab("EU NG Price")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
+  ylab("Active Power")
+```
+
 #Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
 
