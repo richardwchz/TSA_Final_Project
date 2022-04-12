@@ -115,10 +115,7 @@ autoplot()
 
 ```{r check correlation between variables}
 df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
-df_cor<-cor(df_cor)
-row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-df_cor
+cor(df_cor)
 ```
 
 ```{r}
@@ -392,7 +389,6 @@ kbl(scores,
 ETS_fit2 <-  stlf(ts_EU_price_shorten_201407_202203,h=12)
 
 #Plot foresting results
-<<<<<<< HEAD
 
 autoplot(ETS_fit2) + ylab("EU Natural Gas Price ($/MMBtu)")
 
@@ -401,8 +397,6 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit2, series="STL + ETS",PI=FALSE,showgap = F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 
-=======
->>>>>>> ef03266b9c3ef4dbe6245742cc0fd49b4519dc51
 autoplot(ETS_fit2) + autolayer(ETS_fit2, showgap=F) + ylab("EU NG Price")
 
 #Plot model + observed data
