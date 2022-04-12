@@ -115,7 +115,10 @@ autoplot()
 
 ```{r check correlation between variables}
 df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
-cor(df_cor)
+df_cor<-cor(df_cor)
+row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
+colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
+df_cor
 ```
 
 ```{r}
