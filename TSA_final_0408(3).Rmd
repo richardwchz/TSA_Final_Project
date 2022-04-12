@@ -24,7 +24,7 @@ EU_GDP<-EU_GDP %>%
   rename(GDP = GDP1) %>%
   rename(Date = DATE)
 EU_GDP$Date <- as.Date(EU_GDP$Date)
-EU_GDP
+tail(EU_GDP)
 
 Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
@@ -314,29 +314,39 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   ylab("Active Power")
 ```
 ```{r}
+ts_EU_GDP1_202203_202301 <- ts(EU_GDP$GDP[745:755],frequency=12,start=c(2022,03))
+
+ts_EU_GDP2_202203_202301 <- ts(EU_GDP$GDP2[745:755],frequency=12,start=c(2022,03))
+
+ts_EU_GDP3_202203_202301 <- ts(EU_GDP$GDP3[745:755],frequency=12,start=c(2022,03))
+```
+
+
+```{r}
 ARIMA_Four_fit_withGDP_202212 <- auto.arima(ts_EU_price_shorten_201407_202203, 
                              seasonal=FALSE, 
                              lambda=0,
                              xreg=ts_EU_GDP_201407_202203
                              )
 ARIMA_Four_for_withGDP1_202212 <- forecast::forecast(ARIMA_Four_fit_withGDP_202212,
-                           xreg=ts_EU_GDP1_201407_202301[81:93],
+                           xreg=ts_EU_GDP1_202203_202301,
                            h=9
                            ) 
 ARIMA_Four_for_withGDP2_202212 <- forecast::forecast(ARIMA_Four_fit_withGDP_202212,
-                           xreg=ts_EU_GDP2_201407_202301[81:93],
+                           xreg=ts_EU_GDP2_202203_202301,
                            h=9
                            ) 
 ARIMA_Four_for_withGDP3_202212 <- forecast::forecast(ARIMA_Four_fit_withGDP_202212,
-                           xreg=ts_EU_GDP3_201407_202301[81:93],
+                           xreg=ts_EU_GDP3_202203_202301,
                            h=9
                            ) 
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_test) +
   autolayer(ARIMA_Four_for_withGDP1_202212, series="ARIMA_GDP1",PI=FALSE) +
   autolayer(ARIMA_Four_for_withGDP2_202212, series="ARIMA_GDP2",PI=FALSE) +
   autolayer(ARIMA_Four_for_withGDP3_202212, series="ARIMA_GDP3",PI=FALSE) +
   ylab("EU Natural Gas Price Forecast")
 ```
+
 
 
 
