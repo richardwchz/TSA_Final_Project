@@ -59,7 +59,6 @@ plot(ts_EU_price)
 ```
 
 ```{r}
-
 ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1995,01))
 
 ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1960,03))
