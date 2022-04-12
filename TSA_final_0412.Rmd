@@ -79,14 +79,18 @@ ts_import1 %>% mstl() %>%
 autoplot()
 ```
 
+##Use the pettittTest to find out period where trend is consistent 
+p value is really small, reject the null, so there is a change in trend.
+The point of change is 12*14+9=177, so the change in trend happens in 2004.09.01.
+There is another change in trend happening at 2014.07
+Create 2 different df for NG price in 2004.9-2022.3 and in 2014.7-2022.3.
 
 ```{r}
 library(trend)
 pettittTest<-pettitt.test(ts_EU_price)
 print(pettittTest)
 ```
-#p value is really small, reject the null, so there is a change in trend.
-#The point of change is 12*14+9=177, so the change in trend happens in 2004.09.01.
+
 
 ```{r}
 ts_EU_price %>% mstl() %>%
@@ -104,8 +108,6 @@ plot(ts_EU_price_shorten_200409_202203)
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
-#There is another change in trend happening at 2014.07
-
 ```{r}
 ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
 plot(ts_EU_price_shorten_201407_202203)
@@ -116,11 +118,13 @@ ts_EU_price_shorten_201407_202203 %>% mstl() %>%
 autoplot()
 ```
 
+##Create a df with all 4 variables
 ```{r}
 df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 cor(df_cor)
 ```
 
+##auto arima model for NG price data before the sharp increase in the first 3 months of 2022 (2014.7-2020.12)
 ```{r}
 ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
 ts_EU_price_shorten_201407_202101 %>% mstl() %>%
