@@ -355,19 +355,8 @@ cat("The best model by RMSE is:", row.names(scores[best_model_index,]))
 
 
 ```{r}
-#Include the upward
-#ts_EU_price_train2<-subset(ts_EU_price,end=length(ts_EU_price)-2)
-#ts_EU_price_test2<-subset(ts_EU_price,start=length(ts_EU_price)-2)
-#ts_EU_price_train2 %>% mstl() %>%
-#autoplot()
-```
-
-```{r}
 autoplot(ts_EU_price_shorten_201407_202203) +
-<<<<<<< HEAD
 
-=======
->>>>>>> ef03266b9c3ef4dbe6245742cc0fd49b4519dc51
   autolayer(ETS_fit, PI=FALSE, series="STL+ETS", showgap = F) +
   autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA + Fourier", showgap = F) +
   autolayer(TBATS_for,PI=FALSE, series="TBATS", showgap = F) +
@@ -402,7 +391,7 @@ autoplot(ETS_fit2) + autolayer(ETS_fit2, showgap=F) + ylab("EU NG Price")
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit2, series="STL + ETS",PI=FALSE, showgap = F) +
-  ylab("Active Power")
+  ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 
 #Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
