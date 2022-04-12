@@ -372,6 +372,10 @@ cat("The best model by RMSE is:", row.names(scores[best_model_index,]))
 
 ```{r}
 autoplot(ts_EU_price_shorten_201407_202203) +
+<<<<<<< HEAD
+
+=======
+>>>>>>> ef03266b9c3ef4dbe6245742cc0fd49b4519dc51
   autolayer(ETS_fit, PI=FALSE, series="STL+ETS", showgap = F) +
   autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA + Fourier", showgap = F) +
   autolayer(TBATS_for,PI=FALSE, series="TBATS", showgap = F) +
@@ -393,6 +397,17 @@ kbl(scores,
 ETS_fit2 <-  stlf(ts_EU_price_shorten_201407_202203,h=12)
 
 #Plot foresting results
+<<<<<<< HEAD
+
+autoplot(ETS_fit2) + ylab("EU Natural Gas Price ($/MMBtu)")
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(ETS_fit2, series="STL + ETS",PI=FALSE,showgap = F) +
+  ylab("EU Natural Gas Price ($/MMBtu)")
+
+=======
+>>>>>>> ef03266b9c3ef4dbe6245742cc0fd49b4519dc51
 autoplot(ETS_fit2) + autolayer(ETS_fit2, showgap=F) + ylab("EU NG Price")
 
 #Plot model + observed data
