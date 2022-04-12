@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 
 ```{r}
 library(readxl)
@@ -416,11 +421,11 @@ kbl(scores,
 ETS_fit2 <-  stlf(ts_EU_price_shorten_201407_202203,h=12)
 
 #Plot foresting results
-autoplot(ETS_fit2) + ylab("EU Natural Gas Price ($/MMBtu)")
+autoplot(ETS_fit2,showgap = F) + ylab("EU Natural Gas Price ($/MMBtu)")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
+  autolayer(ETS_fit2, series="STL + ETS",showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 
