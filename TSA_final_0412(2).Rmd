@@ -1,7 +1,7 @@
 ---
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r}
@@ -72,8 +72,9 @@ autoplot()
 ts_import1 <- ts(Import$Import1,frequency=12,start=c(2014,01))
 ts_import2 <- ts(Import$Import2,frequency=12,start=c(2014,01))
 ts_import3 <- ts(Import$Import3,frequency=12,start=c(2014,01))
+plot(ts_EU_import1_201407_202212)
 ts_import1 %>% mstl() %>%
-autoplot()
+plot(ts_EU_import1)
 ```
 
 
@@ -175,18 +176,16 @@ ts_EU_import1_201407_202212<-ts(Import$Import1[7:108],frequency=12,start=c(2014,
 ts_EU_import2_201407_202212<-ts(Import$Import2[7:108],frequency=12,start=c(2014,07))
 ts_EU_import3_201407_202212<-ts(Import$Import3[7:108],frequency=12,start=c(2014,07))
 ts_EU_import_201407_202203<-ts(Import$Import3[7:99],frequency=12,start=c(2014,07))
-plot(ts_EU_import_test)
 ts_EU_import_train<-subset(ts_EU_import_201407_202203,end=length(ts_EU_import_201407_202203)-n_for)
 ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_201407_202203)-n_for)
 ```
 
 ```{r}
 #Neural Network Test
-NN_fit <- nnetar(ts_EU_price_train,p=1,P=0,xreg=fourier(ts_EU_price_train,K=2))
-
+#NN_fit <- nnetar(ts_EU_price_train,xreg=fourier(ts_EU_price_train,K=2))
+NN_fit <- nnetar(ts_EU_price_train)
 #NN_for <- forecast(NN_fit, h=365) 
-NN_for <- forecast::forecast(NN_fit, h=3,xreg=fourier(ts_EU_price_train, 
-                                          K=2,h=3))
+NN_for <- forecast::forecast(NN_fit, h=3)
 
 #Plot foresting results
 autoplot(NN_for) +
@@ -194,12 +193,13 @@ autoplot(NN_for) +
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for, series="Neural Network",PI=FALSE)+
+  autolayer(NN_for, series="Fit for Test",PI=FALSE)+
   ylab("#Forecast test based on fitted model") 
 ```
 
-```{r}
-NN_fit_withImport <- nnetar(ts_EU_price_train,p=1,P=0,xreg=ts_EU_import_train)
+```{r NN+Import Fit}
+#do not force p and P?
+NN_fit_withImport <- nnetar(ts_EU_price_train,xreg=ts_EU_import_train)
 
 #NN_for <- forecast(NN_fit, h=365) 
 NN_for_withImport <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_import_test,h=3)
@@ -248,12 +248,8 @@ ARIMA_Four_fit <- auto.arima(ts_EU_price_train,
                              seasonal=FALSE, 
                              lambda=0
                              )
-
-ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,
-                           #xreg=fourier(ts_EU_price_train,
-                                       # K=2,
-                                        #h=3),
-                           h=3
+checkresiduals(ARIMA_Four_fit)
+ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,h=3
                            ) 
 
 #Plot foresting results
@@ -289,6 +285,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 
 ```{r ARIMA+Import}
 #Manually fit Arima model with import variable as regressor
+ARIMA_Four_fit_withImport_false<-auto.arima(ts_EU_price_train,xreg=ts_EU_import_train)
+checkresiduals(ARIMA_Four_fit_withImport_false)
 ARIMA_Four_fit_withImport <- Arima(ts_EU_price_train,order=c(0,1,1),include.drift=TRUE,xreg=ts_EU_import_train
                              )
 #Forecast test based on fitted model
@@ -335,10 +333,11 @@ ARIMA_Four_for_withGDP3_202212 <- forecast::forecast(ARIMA_Four_fit_withGDP_2022
                            h=9
                            ) 
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ARIMA_Four_for_withGDP1_202212, series="ARIMA_GDP1") +
-  autolayer(ARIMA_Four_for_withGDP2_202212, series="ARIMA_GDP2",PI=FALSE) +
-  autolayer(ARIMA_Four_for_withGDP3_202212, series="ARIMA_GDP3",PI=FALSE) +
-  ylab("EU Natural Gas Price Forecast")
+  autolayer(ARIMA_Four_for_withGDP1_202212, series="4%",showgap=F) +
+  autolayer(ARIMA_Four_for_withGDP2_202212, series="3% ",PI=FALSE,showgap=F) +
+  autolayer(ARIMA_Four_for_withGDP3_202212, series="1%",PI=FALSE,showgap=F) +
+  guides(colour=guide_legend(title="Scenarios (GDP Increase)"))+
+  ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 ```{r ARIMA+Import Forecast with 3 scenarios}
 ARIMA_Four_fit_withimport_202212 <- Arima(ts_EU_price_shorten_201407_202203,order=c(0,1,1),include.drift=TRUE,xreg=ts_EU_import_201407_202203
@@ -356,11 +355,36 @@ ARIMA_Four_for_withimport3_202212 <- forecast::forecast(ARIMA_Four_fit_withimpor
                            h=9
                            ) 
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ARIMA_Four_for_withimport1_202212, series="ARIMA_Import1") +
-  autolayer(ARIMA_Four_for_withimport2_202212, series="ARIMA_Import2",PI=FALSE) +
-  autolayer(ARIMA_Four_for_withimport3_202212, series="ARIMA_Import3",PI=FALSE) +
+  autolayer(ARIMA_Four_for_withimport1_202212, series="20%",showgap=F) +
+  autolayer(ARIMA_Four_for_withimport3_202212, series="5%",PI=FALSE,showgap=F) +
+  autolayer(ARIMA_Four_for_withimport2_202212, series="10%",PI=FALSE,showgap=F) +
+  guides(colour=guide_legend(title="Scenarios (Import Decrease)"))+
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
+```{r}
+#p=1,P=0,
+NN_fit_withImport_202212 <- nnetar(ts_EU_price_shorten_201407_202203,xreg=ts_import1[7:99])
+checkresiduals(NN_fit_withImport_202212)
+#NN_for <- forecast(NN_fit, h=365) 
+NN_for_withImport1_202212 <- forecast::forecast(NN_fit_withImport_202212,xreg=ts_import1[99:108],h=12)
+
+NN_for_withImport2_202212 <- forecast::forecast(NN_fit_withImport_202212,xreg=ts_import2[99:108],h=12)
+
+NN_for_withImport3_202212 <- forecast::forecast(NN_fit_withImport_202212,xreg=ts_import3[99:108],h=12)
+
+
+#Plot foresting results
+autoplot(NN_for_withImport1_202212) +
+  ylab("#Forecast test based on fitted model") 
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(NN_for_withImport1_202212, series="20%",showgap=F)+
+  autolayer(NN_for_withImport2_202212, series="10%",showgap=F)+
+  autolayer(NN_for_withImport3_202212, series="5%",PI=FALSE,showgap=F)+
+  ylab("EU Natural Gas Price ($/MMBtu)") 
+```
+
 
 
 ```{r}
@@ -390,7 +414,7 @@ NN_withImport_scores <- accuracy(NN_for_withImport$mean,ts_EU_price_test)
 scores <- as.data.frame(
   rbind(ETS_scores, ARIMA_scores, TBATS_scores, NN_scores,ARIMA_GDP1_scores,ARIMA_Import1_scores,NN_withImport_scores)
   )
-row.names(scores) <- c("STL+ETS", "ARIMA+Fourier","TBATS","NN","ARIMA+GDP1","ARIMA+Import1","NN+Import1")
+row.names(scores) <- c("STL+ETS", "ARIMA","TBATS","NN","ARIMA+GDP","ARIMA+Import","NN+Import")
 
 #choose model with lowest RMSE
 best_model_index <- which.min(scores[,"RMSE"])
@@ -398,13 +422,14 @@ cat("The best model by RMSE is:", row.names(scores[best_model_index,]))
 ```
 
 ```{r}
-autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ETS_fit, PI=FALSE, series="STL+ETS") +
-  autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA + Fourier") +
-  autolayer(TBATS_for,PI=FALSE, series="TBATS") +
-  autolayer(NN_for,PI=FALSE, series="NN") +
-  autolayer(ARIMA_Four_for_withGDP,PI=FALSE, series="ARIMA+GDP1") +
-  autolayer(ARIMA_Four_for_withGDP,PI=FALSE, series="ARIMA+Import1") +
+ts_forplot<-ts(ts_EU_price_shorten_201407_202203[69:93],frequency=12, start=c(2020,03))
+autoplot(ts_forplot) +
+  autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
+  autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA",showgap=F) +
+  autolayer(TBATS_for,PI=FALSE, series="TBATS",showgap=F) +
+  autolayer(NN_for,PI=FALSE, series="NN",showgap=F) +
+  autolayer(ARIMA_Four_for_withGDP,PI=FALSE, series="ARIMA+GDP",showgap=F) +
+  autolayer(ARIMA_Four_for_withGDP,PI=FALSE, series="ARIMA+Import",showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
@@ -427,6 +452,21 @@ autoplot(ETS_fit2,showgap = F) + ylab("EU Natural Gas Price ($/MMBtu)")
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit2, series="STL + ETS",showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
+```
+
+```{r}
+NN_fit_202212 <- nnetar(ts_EU_price_shorten_201407_202203)
+#NN_for <- forecast(NN_fit, h=365) 
+NN_for_202212 <- forecast::forecast(NN_fit_202212, h=12)
+
+#Plot foresting results
+autoplot(NN_for_202212) +
+  ylab("EU Natural Gas Price ($/MMBtu)") 
+
+#Plot model + observed data
+autoplot(ts_EU_price_shorten_201407_202203) +
+  autolayer(NN_for_202212,showgap=F)+
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
 #Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
