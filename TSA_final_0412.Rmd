@@ -79,7 +79,8 @@ ts_import1 %>% mstl() %>%
 autoplot()
 ```
 
-##Use the pettittTest to find out period where trend is consistent 
+##Use the pettittTest to define timeline. 
+This function finds out period where trend is consistent 
 p value is really small, reject the null, so there is a change in trend.
 The point of change is 12*14+9=177, so the change in trend happens in 2004.09.01.
 There is another change in trend happening at 2014.07
@@ -124,7 +125,8 @@ df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$
 cor(df_cor)
 ```
 
-##auto arima model for NG price data before the sharp increase in the first 3 months of 2022 (2014.7-2020.12)
+##auto arima model for training dataset
+In this period (2014.7-2020.12), the decomposed data shows seasonality.
 ```{r}
 ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
 ts_EU_price_shorten_201407_202101 %>% mstl() %>%
@@ -153,6 +155,8 @@ Pacf(ts_EU_price_shorten_201407_202203,lag.max=40,main="PACF of Price")
 #autoplot()
 ```
 
+##split into test and training data for all variables
+The training data is 2014,7-2020.12. The test data is 2022.1-2022.3
 ```{r NG price trimming}
 n_for=3
 ts_EU_price_train<-subset(ts_EU_price_shorten_201407_202203,end=length(ts_EU_price_shorten_201407_202203)-n_for)
@@ -201,7 +205,7 @@ ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_2
 
 
 
-
+##Neural Network model
 ```{r}
 #Neural Network Test
 NN_fit <- nnetar(ts_EU_price_train,p=1,P=0,xreg=fourier(ts_EU_price_train,K=2))
@@ -220,6 +224,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   ylab("Active Power") 
 ```
 
+##ETS Model
 ```{r}
 ETS_fit <-  stlf(ts_EU_price_train,h=3)
 
@@ -231,6 +236,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE) +
   ylab("EU NG Price")
 ```
+
+##TBATS Model
 ```{r}
 # TBATS can take time to fit
 TBATS_fit <- tbats(ts_EU_price_train)
@@ -246,6 +253,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(TBATS_for, series="TBATS",PI=FALSE)+
   ylab("EU NG Price") 
 ```
+
+##Auto ARIMA model
 ```{r}
 
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
@@ -271,7 +280,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE) +
   ylab("EU NG Price")
 ```
-
+##ARIMA model with external variables. 
+Model includes (ARIMA+GDP) and (ARIMA+Import). The correlation between the NG price and consumption is -0.005, which is very weak. Thus we did not use consumption as our external variables. 
 ```{r ARIMA+GDP}
 ARIMA_Four_fit_withGDP <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
@@ -315,6 +325,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ```
 
 
+##Create 3 GDP Scenarios and run ARIMA with GDP scenarios
+The forecast with different GDP scenarios do not have much observable difference.
 ```{r}
 ts_EU_GDP1_202203_202301 <- ts(EU_GDP$GDP[745:755],frequency=12,start=c(2022,03))
 
@@ -348,7 +360,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for_withGDP3_202212, series="ARIMA_GDP3",PI=FALSE) +
   ylab("EU Natural Gas Price Forecast")
 ```
-
+##Create accuracy scores
 ```{r}
 #Model 1: STL + ETS
 ETS_scores <- accuracy(ETS_fit$mean,ts_EU_price_test)  
@@ -367,6 +379,7 @@ ARIMA_GDP1_scores <- accuracy(ARIMA_Four_for_withGDP$mean,ts_EU_price_test)
 
 ```
 
+##Choose the model with the lowest RMSE
 ```{r}
 scores <- as.data.frame(
   rbind(ETS_scores, ARIMA_scores, TBATS_scores, NN_scores,ARIMA_GDP1_scores)
@@ -386,6 +399,9 @@ cat("The best model by RMSE is:", row.names(scores[best_model_index,]))
 #ts_EU_price_train2 %>% mstl() %>%
 #autoplot()
 ```
+
+##Display the forcaste result
+Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
 
 ```{r}
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -417,6 +433,4 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit2, series="STL + ETS",PI=FALSE) +
   ylab("Active Power")
 ```
-
-#Even though the score shows that STL+ETS is the best model, TBATS is the one taht follows the trend most accurately.
 
