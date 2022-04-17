@@ -72,7 +72,6 @@ autoplot()
 ts_import1 <- ts(Import$Import1,frequency=12,start=c(2014,01))
 ts_import2 <- ts(Import$Import2,frequency=12,start=c(2014,01))
 ts_import3 <- ts(Import$Import3,frequency=12,start=c(2014,01))
-plot(ts_EU_import1_201407_202212)
 ts_import1 %>% mstl() %>%
 plot(ts_EU_import1)
 ```
@@ -338,6 +337,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for_withGDP3_202212, series="1%",PI=FALSE,showgap=F) +
   guides(colour=guide_legend(title="Scenarios (GDP Increase)"))+
   ylab("EU Natural Gas Price ($/MMBtu)")
+checkresiduals(ARIMA_Four_fit_withGDP_202212)
 ```
 ```{r ARIMA+Import Forecast with 3 scenarios}
 ARIMA_Four_fit_withimport_202212 <- Arima(ts_EU_price_shorten_201407_202203,order=c(0,1,1),include.drift=TRUE,xreg=ts_EU_import_201407_202203
@@ -382,6 +382,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for_withImport1_202212, series="20%",showgap=F)+
   autolayer(NN_for_withImport2_202212, series="10%",showgap=F)+
   autolayer(NN_for_withImport3_202212, series="5%",PI=FALSE,showgap=F)+
+  guides(colour=guide_legend(title="Scenarios (GDP Increase)"))+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
@@ -452,6 +453,7 @@ autoplot(ETS_fit2,showgap = F) + ylab("EU Natural Gas Price ($/MMBtu)")
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit2, series="STL + ETS",showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
+checkresiduals(ETS_fit2)
 ```
 
 ```{r}
