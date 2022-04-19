@@ -16,7 +16,10 @@ library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
+<<<<<<< HEAD
 install.packages("psych")
+=======
+>>>>>>> 5cbf93b06fb1a8c4d6e4c3e731d7b3cb92bc34d3
 library(psych)
 ```
 
@@ -36,12 +39,11 @@ Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
 Consumption <- na.omit(Consumption)
-
+-
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
 Import <- na.omit(Import)
-
 ```
 
 ```{r}
@@ -49,10 +51,11 @@ EU_price<-EU_price%>%
   rename( Price=PNGASEUUSDM ) 
 #tail(EU_price)
 ```
+#According to IEA, the EU imported 155 bcm of natural gas from Russia in 2021, accounting for around 45% of the EU’s total gas imports and 40% of its total gas consumption. Considering the EU countries plan to reduce or even embargo the natural gas imports from Russia after the Russian invasion of Ukraine, the natural gas price in Europe is expected to experience the most direct impact.
 
 ```{r}
 ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
-plot(ts_EU_price)
+autoplot(ts_EU_price,main="Figure 1. Historical EU Natural Gas Price")+ylab("Natural Gas Price ($/MMBtu) ")
 ```
 
 ```{r}
@@ -88,6 +91,7 @@ print(pettittTest)
 ts_EU_price %>% mstl() %>%
 autoplot()
 ```
+#Based on the ACF and PACF plots of the natural gas price data, we found no seasonality and decided not to include seasonality in our following analysis.
 
 ```{r}
 ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
@@ -98,16 +102,16 @@ ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,sta
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
-#There is another change in trend happening at 2014.07
+#By using the pettitt.test function, we found two points of inflection in our historical natural gas price data, one in September 2004 and the other one in July 2014, which means that there is no significant change in the trend after 2014. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume that the impact of Ukraine crisis happens starts in January 2022, causing tension that has already driven up the natural gas price.
 
 ```{r}
-ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
-plot(ts_EU_price_shorten_201407_202203)
+#ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
+#plot(ts_EU_price_shorten_201407_202203)
 ```
 
 ```{r}
-ts_EU_price_shorten_201407_202203 %>% mstl() %>%
-autoplot()
+#ts_EU_price_shorten_201407_202203 %>% mstl() %>%
+#autoplot()
 ```
 
 ```{r}
@@ -115,17 +119,21 @@ df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$
 df_cor<-cor(df_cor)
 row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-df_cor
+table_1 <- kable(df_cor,"pipe", caption = "Table.1 Variable Correlations")
+table_1
 ```
+#To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that GDP and imports have much stronger correlations than consumptions (table_1). Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model.
 
 ```{r table}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
-kable(head(data,10),"pipe")
+table_2 <- kable(head(data,10),"pipe", caption = "Table.2 First ten rows of data")
 summary <- describe(data)
 summary <- signif(summary, digits=3)
 summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
-kable(summary,"pipe")
+table_3 <- kable(summary,"pipe", caption = "Table.3 Data Descriptions")
+table_2
+table_3
 ```
 
 ```{r}
@@ -214,6 +222,7 @@ ts_EU_import_201407_202203<-ts(Import$Import3[7:99],frequency=12,start=c(2014,07
 ts_EU_import_train<-subset(ts_EU_import_201407_202203,end=length(ts_EU_import_201407_202203)-n_for)
 ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_201407_202203)-n_for)
 ```
+#In order to accurately forecast the natural gas price in 2022, we created three scenarios for each of the two exogenous variables. For GDP growth in the EU in 2022, the EU Economic and Social committee estimated a growth of 4% (GDP_scenario_1) before the Russian invasion of Ukraine, and dropped its estimation to 3% (GDP_scenario_2) after the invasion. Yet, some investment banks like Credit Suisse predicted an annual GDP growth of only 1% (GDP_scenario_3) due to this invasion. While the level of sanctions on natural gas imports from Russia is still under debate in different countries in the EU, we expect the total natural gas import in the EU would decrease about 20% (Import_scenario_2) if there is a complete embargo on Russian imports. If the EU countries failed to embargo Russia, a 10% decrease (Import_scenario_2) in natural gas imports is expected with some sanctions on Russia, and only a 5% decrease (Import_scenario_3) if the sanctions are not strictly implemented.
 
 #Graphs below show the forecasted price from fitted model regarding the training set compared to the observed ones.
 ```{r}
@@ -223,8 +232,8 @@ NN_for <- forecast::forecast(NN_fit, h=3)
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for, series="Fit for Test",PI=FALSE)+
-  ylab("#Forecast test based on fitted model") 
+  autolayer(NN_for, series="Neural Network",PI=FALSE)+
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
 ```{r NN+Import Fit}
@@ -234,7 +243,7 @@ NN_for_withImport <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_import_test
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withImport, series="Neural Network",PI=FALSE)+
+  autolayer(NN_for_withImport, series="Neural Network+Import",PI=FALSE)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 ```{r}
@@ -245,7 +254,7 @@ NN_for_withGDP <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_GDP_test,h=3)
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withGDP, series="Neural Network",PI=FALSE,showgap=F)+
+  autolayer(NN_for_withGDP, series="Neural Network+GDP",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 ```{r}
@@ -261,7 +270,7 @@ NN_for_withGDPandImport <- forecast::forecast(NN_fit_withGDPandImport,xreg=cbind
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withGDPandImport, series="Neural Network",PI=FALSE,showgap=F)+
+  autolayer(NN_for_withGDPandImport, series="Neural Network+GDP+Import",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
