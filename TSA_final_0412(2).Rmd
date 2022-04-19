@@ -234,8 +234,8 @@ NN_for <- forecast::forecast(NN_fit, h=3)
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for, series="Fit for Test",PI=FALSE)+
-  ylab("#Forecast test based on fitted model") 
+  autolayer(NN_for, series="Neural Network",PI=FALSE)+
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
 ```{r NN+Import Fit}
@@ -251,7 +251,7 @@ NN_for_withImport <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_import_test
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withImport, series="Neural Network",PI=FALSE)+
+  autolayer(NN_for_withImport, series="Neural Network+Import",PI=FALSE)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 ```{r}
@@ -267,7 +267,7 @@ NN_for_withGDP <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_GDP_test,h=3)
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withGDP, series="Neural Network",PI=FALSE,showgap=F)+
+  autolayer(NN_for_withGDP, series="Neural Network+GDP",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 ```{r}
@@ -283,7 +283,7 @@ NN_for_withGDPandImport <- forecast::forecast(NN_fit_withGDPandImport,xreg=cbind
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(NN_for_withGDPandImport, series="Neural Network",PI=FALSE,showgap=F)+
+  autolayer(NN_for_withGDPandImport, series="Neural Network+GDP+Import",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
