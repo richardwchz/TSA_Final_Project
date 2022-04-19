@@ -16,7 +16,6 @@ library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
-
 library(psych)
 ```
 
@@ -41,7 +40,6 @@ Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
 Import <- na.omit(Import)
-
 ```
 
 ```{r}
@@ -53,7 +51,7 @@ EU_price<-EU_price%>%
 
 ```{r}
 ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
-plot(ts_EU_price)
+autoplot(ts_EU_price,main="Figure 1. Historical EU Natural Gas Price")+ylab("Natural Gas Price ($/MMBtu) ")
 ```
 
 ```{r}
@@ -100,18 +98,16 @@ ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,sta
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
-#By using the pettitt.test function, we found two inflection points in our natural gas price data, one in 2004 and the other one in 2014, meaning there is no significant change in the trend after 2014. In order to correctly forecast the natural gas price in 2022, we chose to only use data from 2014.07 to 2021.12 for our analysis. Although the natural gas price data for the first three month of 2022 is available, we chose not to use it to generate our forecast, since Russia started mobilizing its troops near Ukraine at the beginning of 2022, causing tension that has already driven up the natural gas price.
-
-#There is another change in trend happening at 2014.07
+#By using the pettitt.test function, we found two points of inflection in our historical natural gas price data, one in September 2004 and the other one in July 2014, which means that there is no significant change in the trend after 2014. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume that the impact of Ukraine crisis happens starts in January 2022, causing tension that has already driven up the natural gas price.
 
 ```{r}
-ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
-plot(ts_EU_price_shorten_201407_202203)
+#ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
+#plot(ts_EU_price_shorten_201407_202203)
 ```
 
 ```{r}
-ts_EU_price_shorten_201407_202203 %>% mstl() %>%
-autoplot()
+#ts_EU_price_shorten_201407_202203 %>% mstl() %>%
+#autoplot()
 ```
 
 ```{r}
