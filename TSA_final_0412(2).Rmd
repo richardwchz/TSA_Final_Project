@@ -332,7 +332,7 @@ autoplot(ARIMA_Four_for) + ylab("EU NG Price")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ARIMA_Four_for, series="ARIMA_FOURIER",PI=FALSE,showgap=F) +
+  autolayer(ARIMA_Four_for, series="ARIMA",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 #The residual from the ARIMA(1,0,4) appears to be white noise with mean around zero and no clear trend observed. THe residuals are normally distributed, and all ACF are within the intervals (i.e. insignificant).
@@ -375,7 +375,7 @@ autoplot(ARIMA_Four_for_withImport) + ylab("EU Natural Gas Price ($/MMBtu)")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ARIMA_Four_for_withImport, series="ARIM+Import",PI=FALSE,showgap=F) +
+  autolayer(ARIMA_Four_for_withImport, series="ARIMA+Import",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 ```{r}
