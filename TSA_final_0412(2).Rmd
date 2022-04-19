@@ -115,17 +115,20 @@ df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$
 df_cor<-cor(df_cor)
 row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-df_cor
+table_1 <- kable(df_cor,"pipe")
+table_1
 ```
 
 ```{r table}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
-kable(head(data,10),"pipe")
+table_2 <- kable(head(data,10),"pipe")
 summary <- describe(data)
 summary <- signif(summary, digits=3)
 summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
-kable(summary,"pipe")
+table_3 <- kable(summary,"pipe")
+table_2
+table_3
 ```
 
 ```{r}
