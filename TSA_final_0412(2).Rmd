@@ -16,10 +16,8 @@ library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
-<<<<<<< HEAD
-install.packages("psych")
-=======
->>>>>>> 5cbf93b06fb1a8c4d6e4c3e731d7b3cb92bc34d3
+
+##install.packages("psych")
 library(psych)
 ```
 
@@ -39,7 +37,7 @@ Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
 Consumption <- na.omit(Consumption)
--
+
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
@@ -175,14 +173,10 @@ Pacf(ts_diff_EU_price,lag.max=60)
 n_for=3
 ts_EU_price_train<-subset(ts_EU_price_shorten_201407_202203,end=length(ts_EU_price_shorten_201407_202203)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten_201407_202203,start=length(ts_EU_price_shorten_201407_202203)-n_for)
-#ts_EU_price_train %>% mstl() %>%
-#autoplot()
+
 ```
 
 ```{r GDP trimming}
-#742 202301
-#732 202203
-#640 201407
 ts_EU_GDP_201407_202203 <- ts(EU_GDP$GDP[640:732],frequency=12,start=c(2014,07))
 ts_EU_GDP_train<-subset(ts_EU_GDP_201407_202203,end=length(ts_EU_GDP_201407_202203)-n_for)
 ts_EU_GDP_test<-subset(ts_EU_GDP_201407_202203,start=length(ts_EU_GDP_201407_202203)-n_for)
@@ -261,12 +255,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ##NN+GDP
 NN_fit_withGDPandImport <- nnetar(ts_EU_price_train,xreg=cbind(ts_EU_GDP_train,ts_EU_import_train))
 
-#NN_for <- forecast(NN_fit, h=365) 
 NN_for_withGDPandImport <- forecast::forecast(NN_fit_withGDPandImport,xreg=cbind(ts_EU_GDP_test,ts_EU_import_test),h=3)
-
-#Plot foresting results
-#autoplot(NN_for_withGDPandImport) +
-  #ylab("Forecast test based on fitted model") 
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -279,9 +268,6 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 #ETS+STL
 #Forecasts of `stl` objects can be obtained using function `stlf()`. Forecast will be obtained by applying a non-seasonal exponential smoothing model to the seasonally adjusted data and re-seasonalizing using the last year of the seasonal component (for all seasonal components).
 ETS_fit <-  stlf(ts_EU_price_train,h=3)
-
-#Plot foresting results
-#autoplot(ETS_fit) + ylab("EU NG Price")
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -439,7 +425,7 @@ kbl(scores,
   kable_styling(latex_options="striped", stripe_index = which.min(scores[,"RMSE"]))
 ```
 #According to the table, the model with the lowest RMSE score is NN purely dependent on historical NG price, the second best model is STL+ETS, followed by ARIMA+Import+GDP. Thus, we choose NN as the model to fit the forecast for 2022. It is noteworthy that our choice of test set is uncommon, because we expect NG prices follow different trend after Ukraine crisis, so this only applies to our data set that undergoes a huge increase and lots of fluctuations. 
-#The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIM with both GDP and Import, but among all NN models, the NN without any exogenous variable.
+#The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIMA with both GDP and Import, but among all NN models, the NN without any exogenous variable.
 
 ```{r}
 ts_forplot<-ts(ts_EU_price_shorten_201407_202203[69:93],frequency=12, start=c(2020,03))
@@ -456,7 +442,7 @@ autoplot(ts_forplot,main="Comparison between Observed Data and Forecasted Values
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
-#To better analyze the differences between different models, forecasts with exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
+#To better analyze the differences between different models, forecasts without exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the NG historical price training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
 ```{r}
 autoplot(ts_forplot,main="Comparison between NN Forecasterd Values") +
   #autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
@@ -492,12 +478,7 @@ autoplot(ts_forplot,main="Comparison between ARIMA Forecasterd Values") +
 ```{r}
 #NN forecast until 2022.12
 NN_fit_202212 <- nnetar(ts_EU_price_shorten_201407_202203)
-#NN_for <- forecast(NN_fit, h=365) 
 NN_for_202212 <- forecast::forecast(NN_fit_202212, h=10)
-
-#Plot foresting results
-#autoplot(NN_for_202212) +
-  #ylab("EU Natural Gas Price ($/MMBtu)") 
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
