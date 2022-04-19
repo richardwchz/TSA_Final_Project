@@ -35,7 +35,6 @@ Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
 Consumption <- na.omit(Consumption)
--
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
@@ -98,7 +97,7 @@ ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,sta
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
-#By using the pettitt.test function, we found two points of inflection in our historical natural gas price data, one in September 2004 and the other one in July 2014, which means that there is no significant change in the trend after 2014. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume that the impact of Ukraine crisis on natural gas price started in January 2022.
+#By using the pettitt.test function, we found two points of inflection in our historical natural gas price data, one in September 2004 and the other one in July 2014, which means that there is no significant change in the trend after 2014. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume that the impact of Ukraine crisis happens starts in January 2022, causing tension that has already driven up the natural gas price.
 
 ```{r}
 #ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
@@ -113,21 +112,21 @@ print(pettittTest2)
 ```{r}
 df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 df_cor<-cor(df_cor)
-row.names(df_cor) <- c("NG Price", "GDP", "Consumption", "Import")
-colnames(df_cor) <- c("NG Price", "GDP", "Consumption", "Import")
-table_1 <- kable(df_cor,"pipe", caption = "Table 1. Correlation Coefficients Matrix")
+row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
+colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
+table_1 <- kable(df_cor,"pipe", caption = "Table.1 Variable Correlations")
 table_1
 ```
-#To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that GDP and imports have much stronger correlations than consumptions (Table 1). Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model.
+#To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that while all variables have weak correlations, GDP and imports have much stronger correlations than consumptions (table_1). While GDP is positively correlated with the natural gas price, import is negatively correlated. Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model. Considering GDP has a positive correlation of 0.05 with import, we will include both variables in one of our models too.
 
 ```{r table}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
-table_2 <- kable(head(data,10),"pipe", caption = "Table 2. First ten rows of data")
+table_2 <- kable(head(data,10),"pipe", caption = "Table.2 First ten rows of data")
 summary <- describe(data)
 summary <- signif(summary, digits=3)
 summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
-table_3 <- kable(summary,"pipe", caption = "Table 3. Data Descriptions")
+table_3 <- kable(summary,"pipe", caption = "Table.3 Data Descriptions")
 table_2
 table_3
 ```
