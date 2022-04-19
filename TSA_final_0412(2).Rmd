@@ -123,7 +123,8 @@ data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
 kable(head(data,10),"pipe")
 summary <- describe(data)
-
+summary <- signif(summary, digits=3)
+summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
 kable(summary,"pipe")
 ```
 
