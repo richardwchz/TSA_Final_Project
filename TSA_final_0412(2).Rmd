@@ -16,6 +16,8 @@ library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
+
+library(psych)
 ```
 
 ```{r}
@@ -114,6 +116,15 @@ df_cor<-cor(df_cor)
 row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 df_cor
+```
+
+```{r table}
+data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
+colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
+kable(head(data,10),"pipe")
+summary <- describe(data)
+
+kable(summary,"pipe")
 ```
 
 ```{r}
@@ -364,11 +375,11 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ```{r}
 #ARIMA with both Import and GDP
 auto_ARIMA_fit_withImportandGDP<-auto.arima(ts_EU_price_train,xreg=cbind(ts_EU_import_train,ts_EU_GDP_train))
-checkresiduals(auto_ARIMA_Four_fit_withImportandGDP)
+checkresiduals(auto_ARIMA_fit_withImportandGDP)
 
 #Manually fit
 ARIMA_fit_withImportandGDP <- Arima(ts_EU_price_train,order=c(0,1,1),include.drift=TRUE,xreg=cbind(ts_EU_import_train,ts_EU_GDP_train))
-checkresiduals(ARIMA_Four_fit_withImportandGDP)
+checkresiduals(ARIMA_fit_withImportandGDP)
 
 ARIMA_for_withImportandGDP <- forecast::forecast(ARIMA_fit_withImportandGDP,
                            xreg=cbind(ts_EU_import_test,ts_EU_GDP_test),
