@@ -126,6 +126,7 @@ table_2 <- kable(head(data,10),"pipe", caption = "Table 2. First ten rows of dat
 summary <- describe(data)
 summary <- signif(summary, digits=3)
 summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
+summary <- summary[,-1]
 table_3 <- kable(summary,"pipe", caption = "Table 3. Data Descriptions")
 table_2
 table_3
