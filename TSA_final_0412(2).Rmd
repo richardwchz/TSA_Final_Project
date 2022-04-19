@@ -133,13 +133,22 @@ table_3
 
 ```{r}
 ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
-ts_EU_price_shorten_201407_202101 %>% mstl() %>%
+ts_EU_price_shorten_201407_202012 %>% mstl() %>%
 autoplot()
-SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202101)
+SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202012)
 SARIMA_autofit
 checkresiduals(SARIMA_autofit)
-ts_EU_price_shorten_201407_202101
+ts_EU_price_shorten_201407_202012
 ```
+ARIMA(0,1,0) = random walk:  If the series Y is not stationary, the simplest possible model for it is a random walk model, which can be considered as a limiting case of an AR(1) model in which the autoregressive coefficient is equal to 1, i.e., a series with infinitely slow mean reversion.  The prediction equation for this model can be written as:
+
+Ŷt  - Yt-1   =  μ
+
+or equivalently
+
+Ŷt  =   μ + Yt-1
+
+...where the constant term is the average period-to-period change (i.e. the long-term drift) in Y.  This model could be fitted as a no-intercept regression model in which the first difference of Y is the dependent variable.  Since it includes (only) a nonseasonal difference and a constant term, it is classified as an "ARIMA(0,1,0) model with constant." The random-walk-without-drift model would be an ARIMA(0,1,0) model without constant
 
 ```{r}
 par(mfrow=c(1,2))  #place plot side by side
