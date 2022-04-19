@@ -16,7 +16,7 @@ library(tidyverse)
 library(smooth)
 library(zoo)
 library(kableExtra)
-
+install.packages("psych")
 library(psych)
 ```
 
@@ -130,7 +130,7 @@ kable(summary,"pipe")
 
 ```{r}
 ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
-ts_EU_price_shorten_201407_202101 %>% mstl() %>%
+ts_EU_price_shorten_201407_202012 %>% mstl() %>%
 autoplot()
 SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202101)
 SARIMA_autofit
@@ -218,14 +218,8 @@ ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_2
 #Graphs below show the forecasted price from fitted model regarding the training set compared to the observed ones.
 ```{r}
 #Neural Network Test
-#NN_fit <- nnetar(ts_EU_price_train,xreg=fourier(ts_EU_price_train,K=2))
 NN_fit <- nnetar(ts_EU_price_train)
-#NN_for <- forecast(NN_fit, h=365) 
 NN_for <- forecast::forecast(NN_fit, h=3)
-
-#Plot foresting results
-#autoplot(NN_for) +
-  #ylab("#Forecast test based on fitted model") 
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -234,15 +228,9 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ```
 
 ```{r NN+Import Fit}
-#do not force p and P?
 NN_fit_withImport <- nnetar(ts_EU_price_train,xreg=ts_EU_import_train)
 
-#NN_for <- forecast(NN_fit, h=365) 
 NN_for_withImport <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_import_test,h=3)
-
-#Plot foresting results
-#autoplot(NN_for_withImport) +
- # ylab("#Forecast test based on fitted model") 
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
@@ -253,12 +241,7 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ##NN+GDP
 NN_fit_withGDP <- nnetar(ts_EU_price_train,xreg=ts_EU_GDP_train)
 
-#NN_for <- forecast(NN_fit, h=365) 
 NN_for_withGDP <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_GDP_test,h=3)
-
-#Plot foresting results
-#autoplot(NN_for_withGDP) +
-  #ylab("Forecast test based on fitted model") 
 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
