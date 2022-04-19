@@ -36,7 +36,7 @@ Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
 Consumption <- na.omit(Consumption)
-
+-
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
@@ -119,7 +119,7 @@ df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$
 df_cor<-cor(df_cor)
 row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-table_1 <- kable(df_cor,"pipe")
+table_1 <- kable(df_cor,"pipe", caption = "Table.1 Variable Correlations")
 table_1
 ```
 #To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that GDP and imports have much stronger correlations than consumptions (table_1). Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model.
@@ -127,11 +127,11 @@ table_1
 ```{r table}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
-table_2 <- kable(head(data,10),"pipe")
+table_2 <- kable(head(data,10),"pipe", caption = "Table.2 First ten rows of data")
 summary <- describe(data)
 summary <- signif(summary, digits=3)
 summary$source <- c("FRED", "FRED", "Eurostat", "Eurostat")
-table_3 <- kable(summary,"pipe")
+table_3 <- kable(summary,"pipe", caption = "Table.3 Data Descriptions")
 table_2
 table_3
 ```
