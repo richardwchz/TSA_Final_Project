@@ -49,6 +49,7 @@ EU_price<-EU_price%>%
   rename( Price=PNGASEUUSDM ) 
 #tail(EU_price)
 ```
+#According to IEA, the EU imported 155 bcm of natural gas from Russia in 2021, accounting for around 45% of the EU’s total gas imports and 40% of its total gas consumption. Considering the EU countries plan to reduce or even embargo the natural gas imports from Russia after the Russian invasion of Ukraine, the natural gas price in Europe is expected to experience the most direct impact.
 
 ```{r}
 ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
@@ -88,6 +89,7 @@ print(pettittTest)
 ts_EU_price %>% mstl() %>%
 autoplot()
 ```
+#Based on the ACF and PACF plots of the natural gas price data, we found no seasonality and decided not to include seasonality in our following analysis.
 
 ```{r}
 ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
@@ -98,6 +100,8 @@ ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,sta
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
+#By using the pettitt.test function, we found two inflection points in our natural gas price data, one in 2004 and the other one in 2014, meaning there is no significant change in the trend after 2014. In order to correctly forecast the natural gas price in 2022, we chose to only use data from 2014.07 to 2021.12 for our analysis. Although the natural gas price data for the first three month of 2022 is available, we chose not to use it to generate our forecast, since Russia started mobilizing its troops near Ukraine at the beginning of 2022, causing tension that has already driven up the natural gas price.
+
 #There is another change in trend happening at 2014.07
 
 ```{r}
@@ -118,6 +122,7 @@ colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 table_1 <- kable(df_cor,"pipe")
 table_1
 ```
+#To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that GDP and imports have much stronger correlations than consumptions (table_1). Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model.
 
 ```{r table}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
@@ -217,6 +222,7 @@ ts_EU_import_201407_202203<-ts(Import$Import3[7:99],frequency=12,start=c(2014,07
 ts_EU_import_train<-subset(ts_EU_import_201407_202203,end=length(ts_EU_import_201407_202203)-n_for)
 ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_201407_202203)-n_for)
 ```
+#In order to accurately forecast the natural gas price in 2022, we created three scenarios for each of the two exogenous variables. For GDP growth in the EU in 2022, the EU Economic and Social committee estimated a growth of 4% (GDP_scenario_1) before the Russian invasion of Ukraine, and dropped its estimation to 3% (GDP_scenario_2) after the invasion. Yet, some investment banks like Credit Suisse predicted an annual GDP growth of only 1% (GDP_scenario_3) due to this invasion. While the level of sanctions on natural gas imports from Russia is still under debate in different countries in the EU, we expect the total natural gas import in the EU would decrease about 20% (Import_scenario_2) if there is a complete embargo on Russian imports. If the EU countries failed to embargo Russia, a 10% decrease (Import_scenario_2) in natural gas imports is expected with some sanctions on Russia, and only a 5% decrease (Import_scenario_3) if the sanctions are not strictly implemented.
 
 #Graphs below show the forecasted price from fitted model regarding the training set compared to the observed ones.
 ```{r}
