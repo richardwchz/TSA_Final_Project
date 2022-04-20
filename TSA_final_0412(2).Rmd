@@ -37,10 +37,7 @@ Consumption <- read_excel("./Data/Natual Gas Consumption.xlsx")
 Consumption <- Consumption[,1:2]
 Consumption$Date <- as.Date(paste(Consumption$Date,"-01",sep=""))
 Consumption <- na.omit(Consumption)
-<<<<<<< HEAD
 
-=======
->>>>>>> 6ad2dcf6109bc26abf267e2d242a30517eacf77b
 Import <- read_excel("./Data/Natual Gas Imports.xlsx")
 Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
@@ -437,13 +434,10 @@ kbl(scores,
   #highlight model with lowest RMSE
   kable_styling(latex_options="striped", stripe_index = which.min(scores[,"RMSE"]))
 ```
-<<<<<<< HEAD
+
 #According to the table, the model with the lowest RMSE score is NN purely dependent on historical NG price, the second best model is STL+ETS, followed by ARIMA+Import+GDP. Thus, we choose NN as the model to fit the forecast for 2022. It is noteworthy that our choice of test set is uncommon, because we expect NG prices follow different trend after Ukraine crisis, so this only applies to our data set that undergoes a huge increase and lots of fluctuations. 
 #The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIMA with both GDP and Import, but among all NN models, the NN without any exogenous variable.
-=======
-  According to the table, the model with the lowest RMSE score is NN purely dependent on historical NG price, the second best model is STL+ETS, followed by ARIMA+Import+GDP. Thus, we choose NN as the model to fit the forecast for 2022. It is noteworthy that our choice of test set is uncommon, because we expect NG prices follow different trend after Ukraine crisis, so this only applies to our data set that undergoes a huge increase and lots of fluctuations. 
-  The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIM with both GDP and Import, but among all NN models, the NN without any exogenous variable.
->>>>>>> 6ad2dcf6109bc26abf267e2d242a30517eacf77b
+
 
 ```{r}
 ts_forplot<-ts(ts_EU_price_shorten_201407_202203[69:93],frequency=12, start=c(2020,03))
@@ -460,11 +454,10 @@ autoplot(ts_forplot,main="Comparison between Observed Data and Forecasted Values
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
-<<<<<<< HEAD
+
 #To better analyze the differences between different models, forecasts without exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the NG historical price training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
-=======
-  To better analyze the differences between different models, forecasts with exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
->>>>>>> 6ad2dcf6109bc26abf267e2d242a30517eacf77b
+
+
 ```{r}
 autoplot(ts_forplot,main="Comparison between NN Forecasterd Values") +
   #autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
