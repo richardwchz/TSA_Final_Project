@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r}
+```{r, echo=FALSE}
 library(readxl)
 library(lubridate)
 library(ggplot2)
@@ -21,7 +21,7 @@ library(kableExtra)
 library(psych)
 ```
 
-```{r}
+```{r, echo=FALSE}
 EU_price<-read.csv(file="./Data/World_NG_Price.csv")
 EU_price$Date<-as.Date(EU_price$Date)
 #EU_price
@@ -43,86 +43,77 @@ Import <- Import[,1:4]
 Import$Date <- as.Date(paste(Import$Date,"-01",sep=""))
 Import <- na.omit(Import)
 ```
+**Introduction, Motivation, Relevance, and Objectives**
+  Since the start of the Russian invasion of Ukraine, although the volume of Russian gas delivered to the EU through Ukraine did not actually decrease, natural gas spot prices and futures prices rose considerably. (Reuters, 2022) For example, “in the UK market, the March price was up 58.6% at 321.97 pence per therm and the winter 2022 price had risen 37.85% to 105p/therm.” One reason is that Russia’s overall natural gas supply decreased compared to previous years. (Reuters, 2022) Another reason is that the demand for natural gas in the EU is rising due to the economic recovery from the pandemic. Arguably, the most important reason that EU natural gas price increase is due to market speculation in response to the political uncertainties. This gives us the motivation for our project: to forecast the EU natural gas price after the Ukraine crisis.
+ 
+  First, let’s take a step back and provide some background on the global natural gas market. The global natural gas market is composed of regional markets that are grouped based on either transoceanic shipping (i.e. the Atlantic and Pacific Basins). “In recent years, roughly 70% of natural gas flows across the globe are transported to market destinations within the country of production, while an additional 20% flows cross international borders through pipelines, and nearly 10% is moved to market destinations as liquefied natural gas (LNG).” The limitation in transporting natural gas creates different prices among the major regions globally. For example, East Asia countries usually have high natural gas prices, followed by EU countries; the US tends to have a lower natural gas price.
+ 
+  The focus of our analysis is on the pipeline transmission of natural gas from Russia to the EU countries. In a 2010 study, “Russia is the world’s largest exporter of pipeline gas, accounting for 26% of global exports”. Many EU countries are among the top 10 gas importers, including Germany, Italy, France, Spain, and the UK (formal EU member). This large volume of Russian export and EU imports of natural gas highlight the dependence of the EU on Russia's imported natural gas through pipelines.
+  
+  The objective of this project is to forecast the EU natural gas price after the Ukraine crisis. The motivation is to see which model (if any), can predict natural gas prices in a period of high volatility caused by political events. We want to explore whether these exogenous variables can capture some of the impacts of the Russia-Ukraine war, thus improving our model performance. 
 
-```{r}
+Specifically, these are our exogenous variables:
+  Consumption: it reflects the seasonal variations in NG price (higher in the winter when heating need is higher)
+  GDP: it is a proxy of economic activities (high economic activities will need more energy inputs and more NG). 
+  Imports: EU’s high dependence on imported NG from Russia
+
+These are our hypotheses:
+  1)Forecasting in a period of high uncertainty will be difficult, as the historical observations are not very applicable to the testing period
+  2)Because we observe a non-linear increase in NG price from 2021, we hypothesize that a feed-forward neural networks model can better capture this trend and give a relatively accurate forecast result. 
+  3)Adding exogenous variables can improve the model performance as they can explain some of the variations in NG price.
+  4) Because we observed a stronger correlation between NG price and import than with GDP, we hypothesized that adding import data can improve the model performance more than adding GDP data. 
+
+```{r, echo=FALSE}
 EU_price<-EU_price%>%
   rename( Price=PNGASEUUSDM ) 
 #tail(EU_price)
 ```
-#According to IEA, the EU imported 155 bcm of natural gas from Russia in 2021, accounting for around 45% of the EU’s total gas imports and 40% of its total gas consumption. Considering the EU countries plan to reduce or even embargo the natural gas imports from Russia after the Russian invasion of Ukraine, the natural gas price in Europe is expected to experience the most direct impact.
+**Dataset Information**
+  According to IEA, the EU imported 155 bcm of natural gas from Russia in 2021, accounting for around 45% of the EU’s total gas imports and 40% of its total gas consumption. Considering the EU countries plan to reduce or even embargo the natural gas imports from Russia after the Russian invasion of Ukraine, the natural gas price in Europe is expected to experience the most direct impact.
 
-```{r}
+```{r, echo=FALSE}
 ts_EU_price <- ts(EU_price$Price,frequency=12,start=c(1990,01))
-autoplot(ts_EU_price,main="Figure 1. Historical EU Natural Gas Price")+ylab("Natural Gas Price ($/MMBtu) ")
+autoplot(ts_EU_price,main="Figure 1. Historical EU Natural Gas Price")+ylab("Natural Gas Price ($/MMBtu)")
 ```
 
-```{r}
+```{r, echo=FALSE}
 ts_EU_GDP <- ts(EU_GDP$GDP,frequency=12,start=c(1960,03))
-#plot(ts_EU_GDP)
-```
-
-```{r}
 ts_consumption <- ts(Consumption$Consumption,frequency=12,start=c(2014,01))
-#plot(ts_consumption)
-#ts_consumption %>% mstl() %>%
-#autoplot()
-```
-
-```{r}
 ts_import1 <- ts(Import$Import1,frequency=12,start=c(2014,01))
 ts_import2 <- ts(Import$Import2,frequency=12,start=c(2014,01))
 ts_import3 <- ts(Import$Import3,frequency=12,start=c(2014,01))
-#ts_import1 %>% mstl() %>%
-#plot(ts_EU_import1)
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 library(trend)
 pettittTest<-pettitt.test(ts_EU_price)
 print(pettittTest)
 ```
-#p value is really small, reject the null, so there is a change in trend.
-#The point of change is 12*14+9=177, so the change in trend happens in 2004.09.01.
 
-```{r}
-ts_EU_price %>% mstl() %>%
-autoplot()
-```
-#Based on the ACF and PACF plots of the natural gas price data, we found no seasonality and decided not to include seasonality in our following analysis.
-
-```{r}
+```{r, echo=FALSE}
 ts_EU_price_shorten_200409_202203 <- ts(EU_price$Price[177:387],frequency=12,start=c(2004,09))
-#plot(ts_EU_price_shorten_200409_202203)
 ```
 
-```{r}
+```{r, echo=FALSE}
 pettittTest2<-pettitt.test(ts_EU_price_shorten_200409_202203)
 print(pettittTest2)
 ```
-#By using the pettitt.test function, we found two points of inflection in our historical natural gas price data, one in September 2004 and the other one in July 2014, which means that there is no significant change in the trend after 2014. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume that the impact of Ukraine crisis happens starts in January 2022, causing tension that has already driven up the natural gas price.
+  By using the pettitt.test function, we detected two points of inflection in our historical NG price data (p<0.05), one in September 2004 and the other one in July 2014, so we trim the data before July 2014, and take NG historical data from JUly 2014 to March 2022 to forecast the NG price until December 2022. Because Russia started mobilizing its troops near Ukraine at the beginning of 2022, we assume NG price since Januray 2022 are impacted by this event.
 
-```{r}
-#ts_EU_price_shorten_201407_202203 <- ts(EU_price$Price[295:387],frequency=12,start=c(2014,07))
-#plot(ts_EU_price_shorten_201407_202203)
-```
-
-```{r}
-#ts_EU_price_shorten_201407_202203 %>% mstl() %>%
-#autoplot()
-```
-
-```{r}
+```{r, echo=FALSE}
 df_cor<-cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 df_cor<-cor(df_cor)
+data2<-cbind(EU_price$Price[295:387],Import$Import1)
+cor(data2)
 row.names(df_cor) <- c("Price", "GDP", "Consumption", "Import")
 colnames(df_cor) <- c("Price", "GDP", "Consumption", "Import")
-table_1 <- kable(df_cor,"pipe", caption = "Table.1 Variable Correlations")
+table_1 <- kable(df_cor,"pipe", caption = "Table1. Correlation Coefficient Matrice")
 table_1
 ```
-#To understand the degree of this impact, we collected the historical monthly natural gas price and the monthly normalized GDP in Europe from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that while all variables have weak correlations, GDP and imports have much stronger correlations than consumptions (table_1). While GDP is positively correlated with the natural gas price, import is negatively correlated. Therefore, we decided to use GDP and natural gas imports as exogenous variables for our ARIMA model. Considering GDP has a positive correlation of 0.05 with import, we will include both variables in one of our models too.
+  To better perform the forecast, we introduce three exogenous variables: conusmption, import, and GDP(as a proxy of economic status) in the EU. Historical monthly natural gas price and the monthly normalized GDP in Europe are from Federal Reserve Banks of St.Louis’ website, and the monthly natural gas consumption and import in the EU are from the Eurostat data browser. Through exploring the correlations between natural gas price and the other factors, we found that while all variables have weak correlations, in which GDP shows a positive correlation to NG price and import shows a negative correlation, and consumption with really weak correlation (Table 1). Therefore, we decided to include GDP and natural gas imports as exogenous variables in our forecast. As GDP and import shows a strongest positive correlation of 0.05, we also analyze models that include both variables to explore how their interaction can impact the forecast result.
 
-```{r table}
+```{r, echo=FALSE}
 data <- cbind(EU_price$Price[295:372],EU_GDP$GDP,Consumption$Consumption,Import$Import1)
 colnames(data) <- c("Price ($/MMBtu)", "GDP(Normalized)", "Consumption(Million Cubic Metres)", "Import(Million Cubic Metres)")
 table_2 <- kable(head(data,10),"pipe", caption = "Table 2. First ten rows of data")
@@ -135,42 +126,17 @@ table_2
 table_3
 ```
 
-```{r}
-ts_EU_price_shorten_201407_202012 <- ts(EU_price$Price[295:372],frequency=12,start=c(2014,07))
-ts_EU_price_shorten_201407_202012 %>% mstl() %>%
-autoplot()
-SARIMA_autofit <- auto.arima(ts_EU_price_shorten_201407_202012)
-SARIMA_autofit
-checkresiduals(SARIMA_autofit)
-ts_EU_price_shorten_201407_202012
-```
-ARIMA(0,1,0) = random walk:  If the series Y is not stationary, the simplest possible model for it is a random walk model. This can be considered as a limiting case of an AR(1) model in which the autoregressive coefficient is equal to 1, i.e., a series with infinitely slow mean reversion.  The prediction equation for this model can be written as:
-
-Ŷt  - Yt-1   =  μ
-
-or equivalently
-
-Ŷt  =   μ + Yt-1
-
-...where the constant term is the average period-to-period change (i.e. the long-term drift) in Y.  This model could be fitted as a no-intercept regression model in which the first difference of Y is the dependent variable.  Since it includes (only) a nonseasonal difference and a constant term, it is classified as an "ARIMA(0,1,0) model with constant." The random-walk-without-drift model would be an ARIMA(0,1,0) model without constant
-
-```{r}
-par(mfrow=c(1,2))  #place plot side by side
-Acf(ts_EU_price_shorten_201407_202203,lag.max=40,main="ACF of Price")
-Pacf(ts_EU_price_shorten_201407_202203,lag.max=40,main="PACF of Price")
-```
-
-```{r}
+```{r, echo=FALSE}
 print("Results for ADF test on EU NG Price data")
 print(adf.test(ts_EU_price_shorten_201407_202203, alternative = "stationary"))
 ```
 
-```{r}
+```{r, echo=FALSE}
 #Because we know the time series contain a stochastic trend, we need to difference it first and use the ACF and PACF of differenced series to determine the parameters. 
 
 diff_EU_price=diff(x=EU_price$Price[295:387],lag=1,differences=1)
 ts_diff_EU_price <- ts(diff_EU_price,frequency=12,start=c(2014,7), end=c(2022,03))
-autoplot(ts_diff_EU_price)+ylab("differenced EU Natural Gas Price ($/MMBtu)")
+autoplot(ts_diff_EU_price,main="Figure 2.Differenced EU Natural Gas Price")+ylab("Natural Gas Price ($/MMBtu)")
 
 par(mfrow=c(1,2))
 Acf(ts_diff_EU_price,lag.max=60)
@@ -179,14 +145,14 @@ Pacf(ts_diff_EU_price,lag.max=60)
   The ADF test indicates that the original series contains a unit root (i.e. there is a stochastic trend)(p>0.99). After removing the trend by differencing, the detrended series doesn’t show a constant pattern within each year. Instead, it looks like a white noise with mean around zero and fluctuating up and down randomly over time. This situation indicates that the original time series doesn’t contain a seasonality component. 
   Neither ACF or PACF of the differenced series show significant values, which could be caused by the superimposing of autoregression and moving average terms.
 
-```{r NG price trimming}
+```{r echo=FALSE}
 n_for=3
 ts_EU_price_train<-subset(ts_EU_price_shorten_201407_202203,end=length(ts_EU_price_shorten_201407_202203)-n_for)
 ts_EU_price_test<-subset(ts_EU_price_shorten_201407_202203,start=length(ts_EU_price_shorten_201407_202203)-n_for)
 
 ```
-From the historical NG price data, we observed a huge increase started from January 2021. Because we want to compare models performance under disruptions, we purposely include this increasing trend in the training set. Thus, our training set includes data from July 2014 to December, while our test set include the data from January to March 2022. 
-```{r GDP trimming}
+  From the historical NG price data, we observed a huge increase started from January 2021. Because we want to compare models performance under disruptions, we purposely include this increasing trend in the training set. Thus, our training set includes data from July 2014 to December 2021, while our test set include the data from January 2022 to March 2022.Same timeframes are used to split exogenous variables so they will have the same length as NG price data when fitting the models and forecasting.
+```{r,echo=FALSE}
 ts_EU_GDP_201407_202203 <- ts(EU_GDP$GDP[640:732],frequency=12,start=c(2014,07))
 ts_EU_GDP_train<-subset(ts_EU_GDP_201407_202203,end=length(ts_EU_GDP_201407_202203)-n_for)
 ts_EU_GDP_test<-subset(ts_EU_GDP_201407_202203,start=length(ts_EU_GDP_201407_202203)-n_for)
@@ -198,19 +164,19 @@ ts_EU_GDP3_201407_202301<-ts(EU_GDP$GDP3[640:742],frequency=12,start=c(2014,07))
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 ts_EU_GDP2_201407_202203 <- ts(EU_GDP$GDP2[640:732],frequency=12,start=c(2014,07))
 ts_EU_GDP_train2<-subset(ts_EU_GDP2_201407_202203,end=length(ts_EU_GDP2_201407_202203)-n_for)
 ts_EU_GDP_test2<-subset(ts_EU_GDP2_201407_202203,start=length(ts_EU_GDP2_201407_202203)-n_for)
 ```
 
-```{r}
+```{r, echo=FALSE}
 ts_EU_GDP3_201407_202203 <- ts(EU_GDP$GDP3[640:732],frequency=12,start=c(2014,07))
 ts_EU_GDP_train3<-subset(ts_EU_GDP3_201407_202203,end=length(ts_EU_GDP3_201407_202203)-n_for)
 ts_EU_GDP_test3<-subset(ts_EU_GDP3_201407_202203,start=length(ts_EU_GDP3_201407_202203)-n_for)
 ```
 
-```{r GDP 2022-2023 data trimming}
+```{r, echo=FALSE}
 ts_EU_GDP1_202203_202301 <- ts(EU_GDP$GDP[745:755],frequency=12,start=c(2022,03))
 
 ts_EU_GDP2_202203_202301 <- ts(EU_GDP$GDP2[745:755],frequency=12,start=c(2022,03))
@@ -218,7 +184,7 @@ ts_EU_GDP2_202203_202301 <- ts(EU_GDP$GDP2[745:755],frequency=12,start=c(2022,03
 ts_EU_GDP3_202203_202301 <- ts(EU_GDP$GDP3[745:755],frequency=12,start=c(2022,03))
 ```
 
-```{r Import trimming}
+```{r, echo=FALSE}
 ts_EU_import1_201407_202212<-ts(Import$Import1[7:108],frequency=12,start=c(2014,07))
 ts_EU_import2_201407_202212<-ts(Import$Import2[7:108],frequency=12,start=c(2014,07))
 ts_EU_import3_201407_202212<-ts(Import$Import3[7:108],frequency=12,start=c(2014,07))
@@ -226,47 +192,60 @@ ts_EU_import_201407_202203<-ts(Import$Import3[7:99],frequency=12,start=c(2014,07
 ts_EU_import_train<-subset(ts_EU_import_201407_202203,end=length(ts_EU_import_201407_202203)-n_for)
 ts_EU_import_test<-subset(ts_EU_import_201407_202203,start=length(ts_EU_import_201407_202203)-n_for)
 ```
-In order to accurately forecast the natural gas price in 2022, we created three scenarios for each of the two exogenous variables. For GDP growth in the EU in 2022, the EU Economic and Social committee estimated a growth of 4% (GDP_scenario_1) before the Russian invasion of Ukraine, and dropped its estimation to 3% (GDP_scenario_2) after the invasion. Yet, some investment banks like Credit Suisse predicted an annual GDP growth of only 1% (GDP_scenario_3) due to this invasion. While the level of sanctions on natural gas imports from Russia is still under debate in different countries in the EU, we expect the total natural gas import in the EU would decrease about 20% (Import_scenario_2) if there is a complete embargo on Russian imports. If the EU countries failed to embargo Russia, a 10% decrease (Import_scenario_2) in natural gas imports is expected with some sanctions on Russia, and only a 5% decrease (Import_scenario_3) if the sanctions are not strictly implemented.
+  In order to accurately forecast the natural gas price in 2022, we created three scenarios for each of the two exogenous variables. For GDP growth in the EU in 2022, the EU Economic and Social committee estimated a growth of 4% (GDP_scenario_1) before the Russian invasion of Ukraine, and dropped its estimation to 3% (GDP_scenario_2) after the invasion. Yet, some investment banks like Credit Suisse predicted an annual GDP growth of only 1% (GDP_scenario_3) due to this invasion. While the level of sanctions on natural gas imports from Russia is still under debate in different countries in the EU,     we expect the total natural gas import in the EU would decrease about 20% (Import_scenario_2) if there is a complete embargo on Russian imports. If the EU countries failed to embargo Russia, a 10% decrease (Import_scenario_2) in natural gas imports is expected with some sanctions on Russia, and only a 5% decrease (Import_scenario_3) if the sanctions are not strictly implemented.
 
-Graphs below show the forecasted price from fitted model regarding the training set compared to the observed ones.
-```{r}
+**Method**
+  Our method is to fit ARIMA, Neural Netowrk (NN), STL+ETS, and TBATS models on NG price training set (including models with exogenous variables), and use the fitted to models to forecast NG price from January 2022 to March 2022. Then the forecasted results are compared to the observed data and the accuracy of different models are compared. Then, a best model with the lowest RMSE score will be selected to forecast the NG price from April 2022 to December 2022. If the model allow us to add in exogenous varaibles, we would add in proposed scenarios for GDP and import to generate corresponding forecast results. 
+
+**Result**
+ Graphs below show the comparison between forecasted price from 2022/1 to 2022/3 using models that fitted the training set and the observed data.
+```{r, echo=FALSE}
 #Neural Network Test
 NN_fit <- nnetar(ts_EU_price_train)
 NN_for <- forecast::forecast(NN_fit, h=3)
 
+autoplot(NN_for) +
+  ylab("EU Natural Gas Price ($/MMBtu)")
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for, series="Neural Network",PI=FALSE)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
-```{r NN+Import Fit}
+```{r, echo=FALSE}
 NN_fit_withImport <- nnetar(ts_EU_price_train,xreg=ts_EU_import_train)
 
 NN_for_withImport <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_import_test,h=3)
 
+autoplot(NN_for_withImport) +
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for_withImport, series="Neural Network+Import",PI=FALSE)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-```{r}
+
+```{r, echo=FALSE}
 ##NN+GDP
 NN_fit_withGDP <- nnetar(ts_EU_price_train,xreg=ts_EU_GDP_train)
 
 NN_for_withGDP <- forecast::forecast(NN_fit_withImport,xreg=ts_EU_GDP_test,h=3)
 
+autoplot(NN_for_withGDP, series="Neural Network+GDP") +
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for_withGDP, series="Neural Network+GDP",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-```{r}
+```{r, echo=FALSEr}
 ##NN+GDP
 NN_fit_withGDPandImport <- nnetar(ts_EU_price_train,xreg=cbind(ts_EU_GDP_train,ts_EU_import_train))
 
 NN_for_withGDPandImport <- forecast::forecast(NN_fit_withGDPandImport,xreg=cbind(ts_EU_GDP_test,ts_EU_import_test),h=3)
 
+autoplot(NN_for_withGDPandImport) +
+  ylab("EU Natural Gas Price ($/MMBtu)") 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(NN_for_withGDPandImport, series="Neural Network+GDP+Import",PI=FALSE,showgap=F)+
@@ -274,33 +253,32 @@ autoplot(ts_EU_price_shorten_201407_202203) +
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 #ETS+STL
 #Forecasts of `stl` objects can be obtained using function `stlf()`. Forecast will be obtained by applying a non-seasonal exponential smoothing model to the seasonally adjusted data and re-seasonalizing using the last year of the seasonal component (for all seasonal components).
 ETS_fit <-  stlf(ts_EU_price_train,h=3)
 
+autoplot(ETS_fit, series="STL + ETS",showgap=F) +
+  ylab("EU Natural Gas Price ($/MMBtu)")
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ETS_fit, series="STL + ETS",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
-```{r}
+```{r, echo=FALSE}
 # TBATS
 TBATS_fit <- tbats(ts_EU_price_train)
 
 TBATS_for <- forecast::forecast(TBATS_fit, h=3)
 
-#Plot foresting results
-autoplot(TBATS_for) +
-  ylab("EU NG Price") 
-
+autoplot(TBATS_for)+ylab("EU Natural Gas Price ($/MMBtu)") 
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(TBATS_for, series="TBATS",PI=FALSE,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
 
-```{r Auto Arima Fit}
+```{r, echo=FALSE}
 #ARIMA autofit
 ARIMA_Four_fit <- auto.arima(ts_EU_price_train, 
                              seasonal=FALSE, 
@@ -310,17 +288,16 @@ checkresiduals(ARIMA_Four_fit)
 ARIMA_Four_for <- forecast::forecast(ARIMA_Four_fit,h=3
                            ) 
 
-#Plot foresting results
-autoplot(ARIMA_Four_for) + ylab("EU NG Price")
-
+autoplot(ARIMA_Four_for) +
+  ylab("EU Natural Gas Price ($/MMBtu)")
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for, series="ARIMA",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
-The residual from the ARIMA(1,0,4) appears to be white noise with mean around zero and no clear trend observed. THe residuals are normally distributed, and all ACF are within the intervals (i.e. insignificant).
+  The residual from the ARIMA(1,0,4) appears to be white noise with mean around zero and no clear trend observed. THe residuals are normally distributed, and all ACF are within the intervals (i.e. insignificant).
 
-```{r ARIMA+GDP}
+```{r, echo=FALSE}
 #Fit Arima model with GDP as regressor
 ARIMA_Four_fit_withGDP <- auto.arima(ts_EU_price_train,
                              seasonal=FALSE, 
@@ -332,14 +309,14 @@ ARIMA_Four_for_withGDP <- forecast::forecast(ARIMA_Four_fit_withGDP,
                            xreg=ts_EU_GDP_test,
                            h=3
                            ) 
-
+autoplot(ARIMA_Four_for_withGDP,showgap=F)
 #Plot model + observed data
 autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for_withGDP, series="ARIMA+GDP",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
 
-```{r ARIMA+Import}
+```{r, echo=FALSE}
 #Manually fit Arima model with import as regressor
 #auto-fit gives poor result ARIMA (0,0,0)
 ARIMA_Four_fit_withImport_false<-auto.arima(ts_EU_price_train,xreg=ts_EU_import_train)
@@ -361,7 +338,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_Four_for_withImport, series="ARIMA+Import",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
-```{r}
+  When fitting the training set with import as an regressor, the result is ARIMA (0,0,0), which means the series is a white noise. However, when checking the residuals, a clear pattern in ACF is observed, and residuals are not normally distributed. An ARIMA (0,1,1) was manually fitted and gave a better residual result (residuals around zero and show no clear trend). THus, ARIMA (0,1,1) was used to forecast NG price from 2022/01 to 2022/03.
+```{r, echo=FALSE}
 #ARIMA with both Import and GDP
 auto_ARIMA_fit_withImportandGDP<-auto.arima(ts_EU_price_train,xreg=cbind(ts_EU_import_train,ts_EU_GDP_train))
 checkresiduals(auto_ARIMA_fit_withImportandGDP)
@@ -383,7 +361,8 @@ autoplot(ts_EU_price_shorten_201407_202203) +
   autolayer(ARIMA_for_withImportandGDP, series="ARIMA+GDP+Import",PI=FALSE,showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
-```{r}
+  A similar situation happened when we autofit NG price training set with both import and GDP as regressors. Thus, we also manually fit an ARIMA (0,1,1) and used it to forecast NG price from 2022/01 to 2022/03.
+```{r, echo=FALSE}
 #Model 1: STL + ETS
 ETS_scores <- accuracy(ETS_fit$mean,ts_EU_price_test)  
 
@@ -415,7 +394,7 @@ NN_withImportandGDP_scores <- accuracy(NN_for_withGDPandImport$mean,ts_EU_price_
 ARIMA_withGDPandImport_scores <- accuracy(ARIMA_for_withImportandGDP$mean,ts_EU_price_test) 
 ```
 
-```{r}
+```{r, echo=FALSE}
 scores <- as.data.frame(
   rbind(ETS_scores, ARIMA_scores, TBATS_scores, NN_scores,ARIMA_GDP1_scores,ARIMA_Import1_scores,ARIMA_withGDPandImport_scores,NN_withImport_scores,NN_withGPD_scores,NN_withImportandGDP_scores)
   )
@@ -435,19 +414,13 @@ kbl(scores,
   kable_styling(latex_options="striped", stripe_index = which.min(scores[,"RMSE"]))
 ```
 
-#According to the table, the model with the lowest RMSE score is NN purely dependent on historical NG price, the second best model is STL+ETS, followed by ARIMA+Import+GDP. Thus, we choose NN as the model to fit the forecast for 2022. It is noteworthy that our choice of test set is uncommon, because we expect NG prices follow different trend after Ukraine crisis, so this only applies to our data set that undergoes a huge increase and lots of fluctuations. 
-#The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIMA with both GDP and Import, but among all NN models, the NN without any exogenous variable.
-
-<<<<<<< HEAD
-=======
   According to the table, the model with the lowest RMSE score is NN purely dependent on historical NG price, the second best model is STL+ETS, followed by ARIMA+Import+GDP. Thus, we choose NN as the model to fit the forecast for 2022. It is noteworthy that our choice of test set is uncommon, because we expect NG prices follow different trend after Ukraine crisis, so this only applies to our data set that undergoes a huge increase and lots of fluctuations. 
-  The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIM with both GDP and Import, but among all NN models, the NN without any exogenous variable.
+  The effect of exogenous variables depends on different models. For example, among all ARIMA models, the best one is ARIMA with both GDP and Import, but among all NN models, the NN without any exogenous variable gives the lowest RMSE score.
 
->>>>>>> ef04f847dc7e2157a7ef1e01d1c6cad0961fba33
 
-```{r}
+```{r, echo=FALSE}
 ts_forplot<-ts(ts_EU_price_shorten_201407_202203[69:93],frequency=12, start=c(2020,03))
-autoplot(ts_forplot,main="Comparison between Observed Data and Forecasted Values") +
+autoplot(ts_forplot,main="Figure 3. Comparison between Observed Data and Forecasted Values") +
   autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
   autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA",showgap=F) +
   autolayer(TBATS_for,PI=FALSE, series="TBATS",showgap=F) +
@@ -460,17 +433,11 @@ autoplot(ts_forplot,main="Comparison between Observed Data and Forecasted Values
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
+  To better analyze the differences between different models, forecasts without exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the NG historical price training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
 
-#To better analyze the differences between different models, forecasts without exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the NG historical price training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
-<<<<<<< HEAD
 
-=======
-=======
-  To better analyze the differences between different models, forecasts with exogenous variables are plotted and analyzed separately below. This graph only shows comparison between observed data and the forecasts based on the training set. TBATs performs well in following the trend observed recently, but it failed to integrate the fluctuations, thus receiving the highest RMSE score. NN and STL+ETS forecast the same price in January, while NN and ARIMA forecast the same price in March.
->>>>>>> ef04f847dc7e2157a7ef1e01d1c6cad0961fba33
-
-```{r}
-autoplot(ts_forplot,main="Comparison between NN Forecasterd Values") +
+```{r, echo=FALSE}
+autoplot(ts_forplot,main="Figure 4. Comparison between NN Forecasterd Values") +
   #autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
   #autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA",showgap=F) +
   #autolayer(TBATS_for,PI=FALSE, series="TBATS",showgap=F) +
@@ -483,9 +450,9 @@ autoplot(ts_forplot,main="Comparison between NN Forecasterd Values") +
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
-  Among NN models results, both NN with import as a regressor and NN with both import and GDP forecast an increase in natural gas price in January 2022 and then a significant decrease in Feburary 2022, while NN and NN with GDP forecast a decrease in January. Overall, there is a significant overlap between NN+GDP+Import and NN+import forecasts, which indicates that import has a greater impact on the forecast results. Compared to the original NN, the integration of import data increases the fluctuation of the forecast results, while GDP only brings up the level of forecast slightly and keeps the flucatation similar as before.
-```{r}
-autoplot(ts_forplot,main="Comparison between ARIMA Forecasterd Values") +
+  Among NN models results, both NN with import as a regressor and NN with both import and GDP forecast an increase in natural gas price in January 2022 and then a significant decrease in Feburary 2022, while NN and NN with GDP forecast a decrease in January. Overall, there is a significant overlap between NN+GDP+Import and NN+import forecasts, which indicates that import has a greater impact on the forecast results. Compared to the original NN, the integration of import data increases the fluctuation of the forecast results, while GDP only brings up the level of forecast slightly and keeps the flucatation similar as before (Figure 4).
+```{r, echo=FALSE}
+autoplot(ts_forplot,main="Figure 5. Comparison between ARIMA Forecasterd Values") +
   #autolayer(ETS_fit, PI=FALSE, series="STL+ETS",showgap=F) +
   autolayer(ARIMA_Four_for, PI=FALSE, series="ARIMA",showgap=F) +
   #autolayer(TBATS_for,PI=FALSE, series="TBATS",showgap=F) +
@@ -499,22 +466,22 @@ autoplot(ts_forplot,main="Comparison between ARIMA Forecasterd Values") +
   ylab("EU Natural Gas Price ($/MMBtu)") +
   guides(colour=guide_legend(title="Models"))
 ```
-  Among ARIMA models results, all four models shows a increase trend in January, and then a decrease trend in Feburary. Compared to the ARIMA that only depends on NG price, GDP as a regressor doesn't change the overall trend of the forecast, while import shows a larger impact on the forecast result When both GDP and import data are added into the ARIMA model, the forecast almost overlaps with the one from ARIMA+import, which indicates that import has a greater impact onto the forecast result compared to GDP.
+  Among ARIMA models results, all four models shows a increase trend in January, and then a decrease trend in Feburary. Compared to the ARIMA that only depends on NG price, GDP as a regressor doesn't change the overall trend of the forecast, while import shows a larger impact on the forecast result When both GDP and import data are added into the ARIMA model, the forecast almost overlaps with the one from ARIMA+import, which indicates that import has a greater impact onto the forecast result compared to GDP (Figure 5).
 
-```{r}
+```{r, echo=FALSE}
 #NN forecast until 2022.12
 NN_fit_202212 <- nnetar(ts_EU_price_shorten_201407_202203)
 NN_for_202212 <- forecast::forecast(NN_fit_202212, h=10)
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203,main="Figure 6. Forecasted EU NG Price with NN Model") +
   autolayer(NN_for_202212,showgap=F)+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-  According to the NN model purely dependent on NG historical price, the forecast results show that EU NG price will flucturates a lot thorughout the year with an overall decreasing trend. The peak is forecasted to be in March 2022, and the price will falls back to 28 $/MMBtu at the end of the year. 
+  According to the best performed model, which is NN purely dependent on NG historical price, the forecast results show that EU NG price will fluctuates a lot throughout the year with an overall decreasing trend. The peak is forecasted to be in March 2022, and the price will falls back to 28 $/MMBtu at the end of the year (Figure 6). 
 
 
-```{r}
+```{r, echo=FALSE}
 #NN forecast in three GDP scenarios
 NN_fit_withGDP_202212 <- nnetar(ts_EU_price_shorten_201407_202203,xreg=ts_EU_GDP_201407_202203)
 #checkresiduals(NN_fit_withImport_202212)
@@ -529,16 +496,16 @@ NN_for_withGDP3_202212 <- forecast::forecast(NN_fit_withGDP_202212,xreg=ts_EU_GD
                            h=9)
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203, main="Figure 7. EU NG Price Forecast with NN under GDP scenarios") +
   autolayer(NN_for_withGDP1_202212, series="20%",showgap=F)+
   autolayer(NN_for_withGDP2_202212, series="10%",showgap=F)+
   autolayer(NN_for_withGDP3_202212, series="5%",PI=FALSE,showgap=F)+
   guides(colour=guide_legend(title="Scenarios (GDP Increase)"))+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-  NN with GDP as a regressor shows a similar pattern compared to the original NN model, the peak is still forecasted to be happen at March 2022, but overall the integration of GDP drives up the level of the price forecast to 35 $/MMBtu at the end of the year. Three GDP scnearios don't lead to any significant effect on the forecast results.
+  NN with GDP as a regressor shows a similar pattern compared to the original NN model, the peak is still forecasted to be happen at March 2022, but overall the integration of GDP drives up the level of the price forecast to 35 $/MMBtu at the end of the year. Three GDP scnearios don't lead to any significant effect on the forecast results (Figure 7).
 
-```{r}
+```{r, echo=FALSE}
 #NN forecast in three import scenarios
 NN_fit_withImport_202212 <- nnetar(ts_EU_price_shorten_201407_202203,xreg=ts_import1[7:99])
 #checkresiduals(NN_fit_withImport_202212)
@@ -551,29 +518,29 @@ NN_for_withImport3_202212 <- forecast::forecast(NN_fit_withImport_202212,xreg=ts
 
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203, main=" Figure 8. EU NG Price Forecast with NN under Import Scenarios") +
   autolayer(NN_for_withImport1_202212, series="20%",showgap=F)+
   autolayer(NN_for_withImport2_202212, series="10%",showgap=F)+
   autolayer(NN_for_withImport3_202212, series="5%",PI=FALSE,showgap=F)+
   guides(colour=guide_legend(title="Scenarios (Import Decrease)"))+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-  NN with import as a regressor forecasts a more significant decreasing trend of NG price over 2022, even though at the end of the year, the price is forecasted to be 30 $/MMBtu (similar as previous NN models). The lowest price forecast reaches almost 20 $/MMBtu. There is no significant difference between the three proposed import scenarios.
+  NN with import as a regressor forecasts a more significant decreasing trend of NG price over 2022, even though at the end of the year, the price is forecasted to be 30 $/MMBtu (similar as previous NN models). The lowest price forecast reaches almost 20 $/MMBtu. There is no significant difference between the three proposed import scenarios (Figure 8).
 
-```{r}
+```{r, echo=FALSE}
 #ETS forecast until 2022.12
 ETS_fit2 <-  stlf(ts_EU_price_shorten_201407_202203,h=10)
 #checkresiduals(ETS_fit2)
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203, main="Figure 9. EU NG Price Forecast Result Using STL+ETS") +
   autolayer(ETS_fit2, series="STL + ETS",showgap=F) +
   ylab("EU Natural Gas Price ($/MMBtu)")
 
 ```
-  Because our historical data shows a significant increase since 2021, we expect the forecast in 2022 to have a high uncertainty. This is proved by our second best model: STL_ETS. The forecast results show a overall increasing trend reaching NG price around 60 $/MMBtu until the end of the year. There is also a wide confidence interval ranges from negative NG price value to higher than 150 $/MMBtu.
+  Because our historical data shows a significant increase since 2021, we expect the forecast in 2022 to have a high uncertainty. This is proved by our second best model: STL_ETS. The forecast results show a overall increasing trend reaching NG price around 60 $/MMBtu until the end of the year. There is also a wide confidence interval ranges from negative NG price value to higher than 150 $/MMBtu (Figure 9).
 
-```{r ARIMA forecast untill 2022.12}
+```{r ARIMA forecast untill 2022.12, echo=FALSE}
 ARIMA_fit_202212<-auto.arima(ts_EU_price_shorten_201407_202203, 
                              seasonal=FALSE, 
                              lambda=0)
@@ -582,11 +549,11 @@ ARIMA_for_202212 <- forecast::forecast(ARIMA_fit_202212,h=10)
                            
 
 #Plot model + observed data
-autoplot(ts_EU_price_shorten_201407_202203) +
-  autolayer(ARIMA_for_202212,showgap=F)+
+autoplot(ts_EU_price_shorten_201407_202203, main="Figure 10. EU NG Price Forecast Result Using ARIMA") +
+  autolayer(ARIMA_for_202212,showgap=F,series="ARIMA")+
   ylab("EU Natural Gas Price ($/MMBtu)") 
 ```
-  To have a sense on how the integration of exogenous variables affect the confidence interval change, we conducted forecast using ARIMA models even though the their RMSE score is not as good as NN or STL+ETS.In contrast to STL+ETS result, the ARIM forecast shows a peak in NG price in the mid 2022, and a drop to around 30 $/MMBtu at the end of the year. However, the confidence interval is still wide with a rnage from 10 to almost 100 $/MMBtu.
+  To have a sense on how the integration of exogenous variables affect the confidence interval change, we conducted forecast using ARIMA models even though the their RMSE score is not as good as NN or STL+ETS.In contrast to STL+ETS result, the ARIM forecast shows a peak in NG price in the mid 2022, and a drop to around 30 $/MMBtu at the end of the year. However, the confidence interval is still wide with a range from 10 to almost 100 $/MMBtu (Figure 10).
 
 ```{r ARIMA+GDP Forecast in three scenarios}
 ARIMA_Four_fit_withGDP_202212 <- auto.arima(ts_EU_price_shorten_201407_202203, 
@@ -606,17 +573,16 @@ ARIMA_Four_for_withGDP3_202212 <- forecast::forecast(ARIMA_Four_fit_withGDP_2022
                            xreg=ts_EU_GDP3_202203_202301,
                            h=9
                            ) 
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203, main="Figure 11. EU NG Price Forecast Results under 3 GDP Scenarios") +
   autolayer(ARIMA_Four_for_withGDP1_202212, series="4%",showgap=F) +
   autolayer(ARIMA_Four_for_withGDP2_202212, series="3% ",PI=FALSE,showgap=F) +
   autolayer(ARIMA_Four_for_withGDP3_202212, series="1%",PI=FALSE,showgap=F)+   
   guides(colour=guide_legend(title="Scenarios (GDP Increase)"))+
   ylab("EU Natural Gas Price ($/MMBtu)")
-checkresiduals(ARIMA_Four_fit_withGDP_202212)
 ```
-  The ARIMA model with GDP as a regressor shows a similar trend, leading to a slightly lower price forecast at the end of the year (25$/MMbtu) than the original ARIMA model (30$/MMBtu), and the forecast is still with high uncertainaty (i.e. wide confidence interval). There is no significant forecast differences under the three scenarios we proposed, and neither of the three scenarios cause a significant change in the forecast result compared to the original ARIMA model.
+  The ARIMA model with GDP as a regressor shows a similar trend, leading to a slightly lower price forecast at the end of the year (25$/MMbtu) than the original ARIMA model (30$/MMBtu), and the forecast is still with high uncertainaty (i.e. wide confidence interval). There is no significant forecast differences under the three scenarios we proposed, and neither of the three scenarios cause a significant change in the forecast result compared to the original ARIMA model (Figure 11).
 
-```{r ARIMA+Import Forecast with 3 scenarios}
+```{r ARIMA+Import Forecast with 3 scenarios, echo=FALSE}
 ARIMA_Four_fit_withimport_202212 <- Arima(ts_EU_price_shorten_201407_202203,order=c(0,1,1),include.drift=TRUE,xreg=ts_EU_import_201407_202203
                              )
 ARIMA_Four_for_withimport1_202212 <- forecast::forecast(ARIMA_Four_fit_withimport_202212,
@@ -631,11 +597,20 @@ ARIMA_Four_for_withimport3_202212 <- forecast::forecast(ARIMA_Four_fit_withimpor
                            xreg=ts_EU_import3_201407_202212[93:102],
                            h=9
                            ) 
-autoplot(ts_EU_price_shorten_201407_202203) +
+autoplot(ts_EU_price_shorten_201407_202203,main="Figure 12. EU NG Price Forecast Results under 3 Import Scenarios") +
   autolayer(ARIMA_Four_for_withimport1_202212, series="20%",showgap=F) +
   autolayer(ARIMA_Four_for_withimport3_202212, series="5%",PI=FALSE,showgap=F) +
   autolayer(ARIMA_Four_for_withimport2_202212, series="10%",PI=FALSE,showgap=F) +
   guides(colour=guide_legend(title="Scenarios (Import Decrease)"))+
   ylab("EU Natural Gas Price ($/MMBtu)")
 ```
-  ARIMA models with import as an regressor shows a completely different resluts than the previous models. THere are mmuch smaller fluctuation and the overall trend is going upward, leading to a NG price forecast at aorund 45 $/MMbtu at the end of 2022.The much narrower confidence interval indicates that the intergration of import data improve the uncertainty of the price forecast. Three import scenarios lead to smilar trend but slightly off level of forecasts. Import decrease by 5% returns the lowest NG price forecast,while import decrease by 20% returns the highest NG price forecast. 
+  ARIMA models with import as a regressor show completely different results than the previous models. There are much smaller fluctuations and the overall trend is going upward, leading to a NG price forecast at around 45 $/MMbtu at the end of 2022.The much narrower confidence interval indicates that the integration of import data improves the uncertainty of the price forecast. Three import scenarios lead to similar trends but slightly off level of forecasts. Import decrease by 5% returns the highest NG price forecast, while import decrease by 20% returns the lowest NG price forecast (Figure 12).
+  Even though historical import and NG price data are negatively correlated, we found that the scenario with lowest import decrease (5%) leads to lowest NG price forecast, and the highest import decrease (20%) leads to highest NG price forecast (Figure x). This indicates that in highly fluctuated time series, the already weak correlation between two variables might be polluted, thus the forecast results might not show the same correlation relationship shown in the historical data.
+
+**Conclusion**
+Our project allows us to test the hypothesis at the beginning of our project:
+1)	Indeed, forecasting in a period of high uncertainty is a difficult exercise, even just forecasting 3 data points. In the test data, compared to Dec 2021, NG price decreased significantly in Jan 2022, increased in Feb 2022, and continued to increase in march 2022. Only two models predicted this general fluctuation correctly: NN and STL+ETS. However, even these two models misrepresented the magnitude of this fluctuation.  The models’ RMSE ranges from 7 to 16, confirming that predicting in a period with high volatility is difficult. 
+2)	As expected, Neural network with the lowest RMSE score at 7.54, turned out to be the best performed model among all models in capturing the nonlinear trend in our time series. 
+3) Adding exogenous variables doens't necessarily lead to an imporvement in model performance. From our results, ARIMA models performed better with exogenous variables, while NN models performed worse with exogenous variables.
+Interestingly, we found that some exogenous variables can improve the certainty of the forecast while others cannot. For example, adding import data into ARIMA model greatly narrowed the confidence level while adding GDP led to a slightly shift in confidence interval but hte width keeps the same. In conclusion, adding exogenous variables does not necessarily decrease the RMSE, but may improve the certainty of the forecast. 
+4) The variable has stronger correlation with NG price indeed affects the forecast results more, but it doesn't necessarily improve the forecast performance. In both NN and ARIMA models, import has a greater impact on NG price forecast results. Import data also leads to greater change in RMSE compared to the ARIMA and NN without any exogenous regressors, but does not necessarily lower the RMSE score. 
